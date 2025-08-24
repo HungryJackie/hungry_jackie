@@ -5,6 +5,7 @@ charset-normalizer==3.4.3
 cryptography==45.0.6
 Django==5.2.5
 django-allauth==65.11.0
+dotenv==0.9.9
 idna==3.10
 pycparser==2.22
 PyJWT==2.10.1
