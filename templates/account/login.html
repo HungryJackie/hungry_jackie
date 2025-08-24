@@ -6,58 +6,46 @@
 {% block extra_head %}
 <style>
     .login-container {
-        max-width: 400px;
+        max-width: 450px;
         margin: 3rem auto;
         background: white;
         border-radius: 1rem;
-        padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        padding: 2.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+        border: 1px solid #f3f4f6;
     }
     
     .login-header {
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
+    }
+    
+    .login-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
     
     .login-header h2 {
-        color: #333;
+        color: #111827;
         font-size: 1.8rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
     
     .login-header p {
-        color: #666;
-        font-size: 0.9rem;
+        color: #6b7280;
+        font-size: 1rem;
+        line-height: 1.5;
     }
     
-    .social-login-section {
-        margin: 2rem 0;
-    }
-    
-    .social-login-title {
-        text-align: center;
-        color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 1.5rem;
-        position: relative;
-    }
-    
-    .social-login-title::before,
-    .social-login-title::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        width: 35%;
-        height: 1px;
-        background-color: #ddd;
-    }
-    
-    .social-login-title::before {
-        left: 0;
-    }
-    
-    .social-login-title::after {
-        right: 0;
+    .login-icon {
+        width: 32px;
+        height: 32px;
+        color: #6366f1;
     }
     
     .social-buttons {
@@ -70,21 +58,27 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.8rem;
-        padding: 0.8rem 1.2rem;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
         border: none;
-        border-radius: 0.5rem;
-        font-size: 1rem;
-        font-weight: 500;
+        border-radius: 0.7rem;
+        font-size: 1.1rem;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
         text-decoration: none;
         width: 100%;
+        position: relative;
+        overflow: hidden;
     }
     
     .social-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .social-btn:active {
+        transform: translateY(-1px);
     }
     
     .social-btn-google {
@@ -95,106 +89,83 @@
     
     .social-btn-google:hover {
         background-color: #f8f9fa;
+        border-color: #4285F4;
     }
     
     .social-btn-kakao {
         background-color: #FEE500;
         color: #000000;
+        border: 2px solid #FEE500;
     }
     
     .social-btn-kakao:hover {
         background-color: #FFEB00;
+        border-color: #FFEB00;
     }
     
     .social-btn-naver {
         background-color: #03C75A;
         color: white;
+        border: 2px solid #03C75A;
     }
     
     .social-btn-naver:hover {
         background-color: #02B351;
+        border-color: #02B351;
     }
     
     .social-icon {
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 24px;
         flex-shrink: 0;
     }
     
-    .form-section {
+    .login-info {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
         margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 1px solid #e0e0e0;
-    }
-    
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #555;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-    
-    .form-group input {
-        width: 100%;
-        padding: 0.7rem;
-        border: 1px solid #ddd;
-        border-radius: 0.375rem;
-        font-size: 1rem;
-        transition: border-color 0.3s;
-    }
-    
-    .form-group input:focus {
-        outline: none;
-        border-color: #764ba2;
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
-    }
-    
-    .btn-primary {
-        width: 100%;
-        padding: 0.8rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 0.5rem;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: transform 0.3s, box-shadow 0.3s;
-    }
-    
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(118, 75, 162, 0.3);
-    }
-    
-    .form-footer {
         text-align: center;
-        margin-top: 1.5rem;
-        font-size: 0.9rem;
     }
     
-    .form-footer a {
+    .login-info-title {
+        color: #6366f1;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .info-icon {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .login-info-text {
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 2rem;
+    }
+    
+    .back-link a {
         color: #764ba2;
         text-decoration: none;
-        font-weight: 500;
+        font-size: 0.95rem;
+        transition: color 0.3s;
     }
     
-    .form-footer a:hover {
+    .back-link a:hover {
+        color: #5a3678;
         text-decoration: underline;
-    }
-    
-    .error-message {
-        background-color: #fee;
-        color: #c33;
-        padding: 0.7rem;
-        border-radius: 0.375rem;
-        margin-bottom: 1rem;
-        font-size: 0.9rem;
     }
 </style>
 {% endblock %}
@@ -202,38 +173,56 @@
 {% block content %}
 <div class="login-container">
     <div class="login-header">
-        <h2>🍔 환영합니다!</h2>
-        <p>Hungry Jackie에 로그인하세요</p>
+        <h2>
+            <svg class="login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+            </svg>
+            로그인
+        </h2>
+        <p>소셜 계정으로 간편하게 시작하세요</p>
     </div>
     
-    <div class="social-login-section">
-        <div class="social-login-title">간편 로그인</div>
-        <div class="social-buttons">
-            <a href="{% provider_login_url 'google' %}" class="social-btn social-btn-google">
-                <svg class="social-icon" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Google로 계속하기
-            </a>
-            
-            <a href="{% provider_login_url 'kakao' %}" class="social-btn social-btn-kakao">
-                <svg class="social-icon" viewBox="0 0 24 24">
-                    <path fill="#000000" d="M12 3c-4.97 0-9 3.185-9 7.115 0 2.557 1.707 4.8 4.27 6.054-.188.702-.682 2.545-.78 2.94-.123.49.178.483.376.351.155-.103 2.466-1.674 3.464-2.353.541.08 1.1.123 1.67.123 4.97 0 9-3.185 9-7.115S16.97 3 12 3z"/>
-                </svg>
-                카카오로 계속하기
-            </a>
-            
-            <a href="{% provider_login_url 'naver' %}" class="social-btn social-btn-naver">
-                <svg class="social-icon" viewBox="0 0 24 24">
-                    <path fill="#FFFFFF" d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
-                </svg>
-                네이버로 계속하기
-            </a>
+    <div class="social-buttons">
+        <a href="{% provider_login_url 'google' %}" class="social-btn social-btn-google">
+            <svg class="social-icon" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Google로 시작하기
+        </a>
+        
+        <a href="{% provider_login_url 'kakao' %}" class="social-btn social-btn-kakao">
+            <svg class="social-icon" viewBox="0 0 24 24">
+                <path fill="#000000" d="M12 3c-4.97 0-9 3.185-9 7.115 0 2.557 1.707 4.8 4.27 6.054-.188.702-.682 2.545-.78 2.94-.123.49.178.483.376.351.155-.103 2.466-1.674 3.464-2.353.541.08 1.1.123 1.67.123 4.97 0 9-3.185 9-7.115S16.97 3 12 3z"/>
+            </svg>
+            카카오로 시작하기
+        </a>
+        
+        <a href="{% provider_login_url 'naver' %}" class="social-btn social-btn-naver">
+            <svg class="social-icon" viewBox="0 0 24 24">
+                <path fill="#FFFFFF" d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
+            </svg>
+            네이버로 시작하기
+        </a>
+    </div>
+    
+    <div class="login-info">
+        <div class="login-info-title">
+            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            간편한 소셜 로그인
+        </div>
+        <div class="login-info-text">
+            별도 회원가입 없이 기존 소셜 계정으로<br>
+            바로 Hungry Jackie를 이용하실 수 있습니다.
         </div>
     </div>
     
+    <div class="back-link">
+        <a href="/">← 메인으로 돌아가기</a>
+    </div>
 </div>
 {% endblock %}
