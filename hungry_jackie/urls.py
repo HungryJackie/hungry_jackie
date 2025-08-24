@@ -20,6 +20,11 @@ from accounts import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # 커스텀 인증 뷰들 (allauth보다 먼저 정의해야 함)
+    path('accounts/login/', views.login, name='account_login'),
+    path('accounts/logout/', views.logout, name='account_logout'),
+
     path('accounts/', include('allauth.urls')),
     path('', views.home, name='home'),  # 메인 페이지를 위한 URL을 추가합니다.
 ]

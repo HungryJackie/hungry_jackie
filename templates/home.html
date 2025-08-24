@@ -1,13 +1,46 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Hungry Jackie에 오신 것을 환영합니다!</h1>
-<p>
+<div class="welcome-card">
     {% if user.is_authenticated %}
-        안녕하세요, {{ user.email }}님!
-        <a href="{% url 'account_logout' %}">로그아웃</a>
+        <h1>환영합니다!</h1>
+        <p>{{ user.email }}님, Hungry Jackie에서 당신만의 콘텐츠를 발견해보세요!</p>
+        
+        <!-- 추후 프로필 완성 여부에 따른 조건부 표시 -->
+        <div style="margin-top: 2rem; padding: 1.5rem; background-color: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <p style="color: #6366f1; font-weight: 600; font-size: 1rem;">다음 단계</p>
+            </div>
+            <p style="color: #64748b; margin-top: 0.5rem;">프로필 설정과 심리검사를 통해 맞춤 추천을 받아보세요!</p>
+        </div>
     {% else %}
-        <a href="{% url 'account_login' %}">로그인하기</a> 또는 <a href="{% url 'account_signup' %}">회원가입</a>
+        <h1>Hungry Jackie에 오신 것을 환영합니다!</h1>
+        <p>심리검사를 통한 맞춤형 웹툰·웹소설 추천 서비스</p>
+        
+        <div style="margin-top: 2rem;">
+            <a href="{% url 'account_login' %}" 
+               style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; background-color: #6366f1; color: white; text-decoration: none; border-radius: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                시작하기
+            </a>
+        </div>
+        
+        <div style="margin-top: 2rem; padding: 1.5rem; background-color: #f8fafc; border-radius: 0.75rem; border: 1px solid #e2e8f0;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <p style="color: #10b981; font-weight: 600; font-size: 0.95rem;">간편한 소셜 로그인</p>
+            </div>
+            <p style="color: #64748b; font-size: 0.95rem; line-height: 1.5;">
+                별도 회원가입 없이 기존 소셜 계정으로 바로 Hungry Jackie를 이용하실 수 있습니다.
+            </p>
+        </div>
     {% endif %}
-</p>
+</div>
 {% endblock %}
