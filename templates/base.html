@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Hungry Jackie{% endblock %}</title>
+    {% load static %}
     <style>
         * {
             margin: 0;
@@ -128,6 +129,33 @@
             color: #6366f1;
         }
 
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .user-profile:hover {
+            background-color: #f3f4f6;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #f3f4f6;
+            border: 2px solid #e5e7eb;
+        }
+
         /* 알림 메시지 스타일 */
         .messages {
             margin-bottom: 1rem;
@@ -201,12 +229,28 @@
             </a>
             <div class="nav-links">
                 {% if user.is_authenticated %}
-                    <span class="user-info">
-                        <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                        {{ user.email }}님
-                    </span>
+                    <a href="{% url 'profiles:profile' %}" class="user-profile">
+                        {% if user.profile.is_profile_complete %}
+                            <div class="user-avatar">
+                                <img 
+                                    src="{% static 'images/profiles/' %}{{ user.profile.profile_image }}"
+                                    alt="{{ user.profile.get_profile_image_display }}"
+                                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                >
+                                <!-- 이미지 로드 실패시 기본 아바타 -->
+                                <div style="display: none; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 14px; align-items: center; justify-content: center; font-weight: bold;">
+                                    {{ user.profile.display_name|first|upper }}
+                                </div>
+                            </div>
+                            <span>{{ user.profile.display_name }}님</span>
+                        {% else %}
+                            <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span>{{ user.email }}님</span>
+                        {% endif %}
+                    </a>
                     <form method="post" action="{% url 'account_logout' %}" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn-logout">로그아웃</button>

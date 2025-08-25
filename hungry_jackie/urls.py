@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from accounts import views
 
 urlpatterns = [
@@ -25,6 +27,18 @@ urlpatterns = [
     path('accounts/login/', views.login, name='account_login'),
     path('accounts/logout/', views.logout, name='account_logout'),
 
+    # django-allauth URLs
     path('accounts/', include('allauth.urls')),
-    path('', views.home, name='home'),  # 메인 페이지를 위한 URL을 추가합니다.
+    
+    # 프로필 관련 URLs
+    path('profile/', include('profiles.urls')),
+    
+    # 메인 페이지
+    path('', views.home, name='home'),
 ]
+
+
+# 개발 환경에서 미디어 파일 서빙
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
