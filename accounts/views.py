@@ -12,9 +12,9 @@ def login(request):
         return redirect('/')
     return render(request, 'account/login.html')
 
-@require_POST
-@csrf_protect
-def logout(request):
-    """안전한 로그아웃 처리"""
-    auth_logout(request)
-    return redirect('/')
+# @require_POST
+# @csrf_protect
+# def logout(request):
+#     """안전한 로그아웃 처리"""
+#     auth_logout(request)
+#     return redirect('/')
