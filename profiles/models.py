@@ -33,7 +33,7 @@ class Profile(models.Model):
     profile_image = models.CharField(
         max_length=40,
         choices=PROFILE_IMAGES,
-        default='images/profiles/default_1.png',
+        default='default_1.png',
         verbose_name="프로필 이미지"
     )
     
@@ -61,13 +61,24 @@ class Profile(models.Model):
         """프로필 이미지 URL 반환"""
         return f"/static/images/profiles/{self.profile_image}"
 
+    def get_profile_image_display(self):
+        """프로필 이미지 표시명 반환"""
+        for value, label in self.PROFILE_IMAGES:
+            if value == self.profile_image:
+                return label
+        return "기본 이미지"
+
 
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     """User 생성 시 자동으로 Profile 생성"""
     if created:
+        # 새 사용자 생성 시 프로필 생성
         Profile.objects.create(user=instance)
     else:
         # 기존 유저의 경우 Profile이 없으면 생성
         if not hasattr(instance, 'profile'):
             Profile.objects.create(user=instance)
+        else:
+            # 프로필이 있으면 저장 (updated_at 갱신)
+            instance.profile.save()

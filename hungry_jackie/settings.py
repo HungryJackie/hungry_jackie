@@ -138,6 +138,10 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 
+# 커스텀 어댑터 설정 추가
+ACCOUNT_ADAPTER = 'profiles.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'profiles.adapters.CustomSocialAccountAdapter'
+
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/accounts/login/'
 

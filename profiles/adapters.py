@@ -12,8 +12,13 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         """로그인 후 리다이렉트 URL 결정"""
         user = request.user
         
+        # Profile 객체가 없는 경우 생성 (signals가 작동하지 않은 경우 대비)
+        from .models import Profile
+        if not hasattr(user, 'profile'):
+            Profile.objects.create(user=user)
+        
         # 프로필이 완성되지 않은 사용자는 프로필 설정으로
-        if hasattr(user, 'profile') and not user.profile.is_profile_complete:
+        if not user.profile.is_profile_complete:
             return reverse('profiles:setup_profile')
         
         # 프로필이 완성된 사용자는 기본 홈으로
@@ -21,6 +26,10 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     
     def add_message(self, request, level, message_tag, message, **kwargs):
         """로그인 관련 메시지는 추가하지 않음"""
+        # message가 문자열이 아닌 경우 처리
+        if not isinstance(message, str):
+            return
+            
         # 로그인 관련 메시지 필터링
         if 'login' not in message.lower() and '로그인' not in message:
             super().add_message(request, level, message_tag, message, **kwargs)
@@ -33,8 +42,13 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         """소셜 로그인 후 리다이렉트 URL 결정"""
         user = request.user
         
+        # Profile 객체가 없는 경우 생성 (signals가 작동하지 않은 경우 대비)
+        from .models import Profile
+        if not hasattr(user, 'profile'):
+            Profile.objects.create(user=user)
+        
         # 프로필이 완성되지 않은 사용자는 프로필 설정으로
-        if hasattr(user, 'profile') and not user.profile.is_profile_complete:
+        if not user.profile.is_profile_complete:
             return reverse('profiles:setup_profile')
         
         # 프로필이 완성된 사용자는 기본 홈으로  
@@ -54,6 +68,10 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     
     def add_message(self, request, level, message_tag, message, **kwargs):
         """로그인 관련 메시지는 추가하지 않음"""
+        # message가 문자열이 아닌 경우 처리
+        if not isinstance(message, str):
+            return
+            
         # 로그인 관련 메시지 필터링 (영문/한글 모두)
         message_lower = message.lower()
         if ('login' not in message_lower and 'sign' not in message_lower and 
