@@ -9,11 +9,11 @@ class Profile(models.Model):
     
     # 기본 프로필 이미지 선택지
     PROFILE_IMAGES = [
-        ('default_1.png', '친근한 고양이'),
-        ('default_2.png', '따뜻한 강아지'), 
-        ('default_3.png', '차분한 올빼미'),
-        ('default_4.png', '활발한 토끼'),
-        ('default_5.png', '지혜로운 여우'),
+        ('default_1.png', 'default_1.png'),
+        ('default_2.png', 'default_2.png'), 
+        ('default_3.png', 'default_3.png'),
+        ('default_4.png', 'default_4.png'),
+        ('default_5.png', 'default_5.png'),
     ]
     
     user = models.OneToOneField(
@@ -63,10 +63,7 @@ class Profile(models.Model):
 
     def get_profile_image_display(self):
         """프로필 이미지 표시명 반환"""
-        for value, label in self.PROFILE_IMAGES:
-            if value == self.profile_image:
-                return label
-        return "기본 이미지"
+        return "프로필 이미지"  # 간단한 설명만 반환
 
 
 @receiver(post_save, sender=User)
