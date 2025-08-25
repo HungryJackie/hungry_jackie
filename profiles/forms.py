@@ -29,11 +29,8 @@ class ProfileSetupForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['nickname'].required = True
         
-        # 프로필 이미지 선택지에 대한 친화적인 설명 추가
-        profile_choices = []
-        for value, label in Profile.PROFILE_IMAGES:
-            profile_choices.append((value, label))
-        self.fields['profile_image'].choices = profile_choices
+        # 프로필 이미지 선택지는 기본 설정 그대로 사용 (텍스트 없이)
+        # 템플릿에서 이미지만 표시하도록 처리
     
     def clean_nickname(self):
         """닉네임 유효성 검사"""
