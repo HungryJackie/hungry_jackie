@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}대화 - {{ conversation.character.name }}{% endblock %}
+{% block content %}
+<h1 style="margin-bottom:.5rem;">{{ conversation.character.name }}와의 대화</h1>
+<div style="color:#6b7280; font-size:.95rem; margin-bottom:.75rem;">
+  크레딧: {{ user_credit.total_credits }} (메시지당 {{ credit_cost }})
+</div>
+
+<div id="chat" style="border:1px solid #e5e7eb; border-radius:.75rem; padding:1rem; min-height:320px; max-height:520px; overflow:auto;">
+  {% for m in messages %}
+    <div style="margin-bottom:.75rem;">
+      <strong>{{ m.get_sender_display }}:</strong>
+      <div style="white-space:pre-wrap; margin-top:.25rem;">{{ m.content }}</div>
+      <div style="color:#94a3b8; font-size:.8rem;">{{ m.timestamp|date:"Y-m-d H:i" }}</div>
+    </div>
+  {% empty %}
+    <p style="color:#94a3b8;">첫 메시지를 보내보세요.</p>
+  {% endfor %}
+</div>
+
+<div style="margin-top:1rem; display:flex; gap:.5rem;">
+  <textarea id="msg" rows="3" style="flex:1; padding:.75rem; border:1px solid #e5e7eb; border-radius:.5rem;"></textarea>
+  <button id="send" class="btn-login" style="padding:.75rem 1rem;">보내기</button>
+</div>
+
+<script>
+  (function(){
+    const sendBtn = document.getElementById('send');
+    const ta = document.getElementById('msg');
+    const chat = document.getElementById('chat');
+
+    function append(role, text){
+      const box = document.createElement('div');
+      box.style.marginBottom = '.75rem';
+      box.innerHTML = '<strong>'+role+':</strong><div style="white-space:pre-wrap; margin-top:.25rem;"></div>';
+      box.querySelector('div').textContent = text;
+      chat.appendChild(box);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function send(){
+      const msg = ta.value.trim();
+      if(!msg) return;
+      ta.value = '';
+      append('사용자', msg);
+
+      try{
+        const res = await fetch("{% url 'characters:send_message' conversation.id %}", {
+          method:'POST',
+          headers:{'Content-Type':'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+          body: JSON.stringify({message: msg})
+        });
+        const data = await res.json();
+        if(!data.success){
+          append('시스템', data.error || '오류가 발생했습니다.');
+          return;
+        }
+        append('{{ conversation.character.name }}', data.ai_response);
+      }catch(e){
+        append('시스템', '네트워크 오류가 발생했습니다.');
+      }
+    }
+
+    sendBtn.addEventListener('click', send);
+    ta.addEventListener('keydown', e => {
+      if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); send(); }
+    });
+  })();
+</script>
+{% endblock %}

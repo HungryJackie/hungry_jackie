@@ -36,6 +36,9 @@ urlpatterns = [
     # 감정 분석 시스템 URLs
     path('emotions/', include('emotions.urls')),
     
+    # 캐릭터 관리 URLs
+    path('characters/', include('characters.urls')),
+    
     # 메인 페이지
     path('', views.home, name='home'),
 ]
