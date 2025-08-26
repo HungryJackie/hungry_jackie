@@ -6,7 +6,7 @@
     {% if user.is_authenticated %}
         {% if user.profile.is_profile_complete %}
             <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1.5rem;">
-                <div class="user-avatar" style="width: 80px; height: 80px; border: 3px solid #e5e7eb; overflow: hidden;">
+                <div class="user-avatar" style="width: 80px; height: 80px; border:none; overflow: hidden;">
                     <img 
                         src="{% static 'images/profiles/' %}{{ user.profile.profile_image }}"
                         alt="{{ user.profile.get_profile_image_display }}"

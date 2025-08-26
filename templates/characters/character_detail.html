@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ character.name }} - Hungry Jackie{% endblock %}
+{% block content %}
+<div style="display:grid; grid-template-columns: 1fr; gap:1rem; max-width:900px;">
+  <div style="border:1px solid #e5e7eb; border-radius:.75rem; padding:1rem;">
+    <h1 style="margin-bottom:.5rem;">{{ character.name }}</h1>
+    <div style="color:#6b7280; font-size:.95rem; margin-bottom:.75rem;">
+      장르: {{ character.genre.name }} · 평균 평점: {{ character.average_rating }} ({{ character.rating_count }}명)
+    </div>
+    <p style="white-space:pre-line; margin-bottom:.75rem;">{{ character.description }}</p>
+
+    <details style="margin:.5rem 0;"><summary style="cursor:pointer;">성격</summary><pre style="white-space:pre-wrap; margin:.5rem 0 0 0;">{{ character.personality }}</pre></details>
+    <details style="margin:.5rem 0;"><summary style="cursor:pointer;">배경 이야기</summary><pre style="white-space:pre-wrap; margin:.5rem 0 0 0;">{{ character.background_story }}</pre></details>
+    <details style="margin:.5rem 0;"><summary style="cursor:pointer;">말투/대화 스타일</summary><pre style="white-space:pre-wrap; margin:.5rem 0 0 0;">{{ character.speaking_style }}</pre></details>
+    <div style="margin:.5rem 0; color:#6b7280;">태그: 
+      {% for t in character.get_tags_list %}<span>#{{ t }}</span>{% empty %}없음{% endfor %}
+    </div>
+
+    <div style="margin-top:1rem;">
+      {% if user.is_authenticated %}
+        {% if user_conversation %}
+          <a class="btn-login" href="{% url 'characters:conversation' user_conversation.id %}" style="padding:.6rem 1.2rem;">대화 계속하기</a>
+        {% else %}
+          <a class="btn-login" href="{% url 'characters:start_conversation' character.id %}" style="padding:.6rem 1.2rem;">대화 시작</a>
+        {% endif %}
+      {% else %}
+        <a class="btn-login" href="{% url 'account_login' %}" style="padding:.6rem 1.2rem;">로그인하고 대화 시작</a>
+      {% endif %}
+      <a class="link" href="{% url 'characters:character_list' %}">목록</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
