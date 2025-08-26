@@ -1,0 +1,88 @@
+{# templates/characters/character_list.html #}
+{% extends "base.html" %}
+{% block content %}
+
+<h1 style="margin-bottom:1rem;">공개 캐릭터</h1>
+
+<form method="get" style="margin-bottom:1rem; display:flex; gap:.5rem;">
+  <input type="text" name="search" value="{{ search_query|default:'' }}" placeholder="검색"
+         style="padding:.5rem 1rem; border:1px solid #e5e7eb; border-radius:.5rem; flex:1;">
+  <select name="genre" style="padding:.5rem 1rem; border:1px solid #e5e7eb; border-radius:.5rem;">
+    <option value="">전체 장르</option>
+    {% for g in genres %}
+      <option value="{{ g.id }}" {% if current_genre|default:'' == g.id|stringformat:"s" %}selected{% endif %}>{{ g.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" style="padding:.5rem 1rem; border-radius:.5rem; background:#6366f1; color:#fff;">필터</button>
+</form>
+
+{% if page_obj.object_list %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;">
+  {% for ch in page_obj.object_list %}
+  <div style="border:1px solid #e5e7eb;border-radius:.75rem;padding:1rem;background:#fff;text-align:center;transition:all .2s;">
+
+    {# 캐릭터 이미지 #}
+    {% if ch.character_image %}
+      <a href="{% url 'characters:character_detail' ch.id %}">
+        <img src="{{ ch.character_image.url }}" alt="{{ ch.name }}"
+             style="width:100px;height:100px;object-fit:cover;margin:0 auto .75rem;display:block;border-radius:50%;">
+      </a>
+    {% else %}
+      <div style="width:100px;height:100px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;">
+        <span style="font-size:2rem;color:#9ca3af;">?</span>
+      </div>
+    {% endif %}
+
+    {# 캐릭터 이름 #}
+    <h3 style="margin:0 0 .35rem 0;font-size:1.1rem;font-weight:600;">
+      <a href="{% url 'characters:character_detail' ch.id %}" style="color:#111827;text-decoration:none;">
+        {{ ch.name }}
+      </a>
+    </h3>
+
+    {# 장르 + by 닉네임 #}
+    <div style="margin-bottom:.6rem; font-size:.85rem; color:#6b7280;">
+      <span style="display:inline-block;padding:.25rem .6rem;border-radius:9999px;background:#f3f4f6;color:#4b5563;font-size:.8rem;font-weight:400;">
+        {{ ch.genre.name }}
+      </span>
+      · by 
+      {% if ch.creator.profile and ch.creator.profile.display_name %}
+        {{ ch.creator.profile.display_name }}
+      {% else %}
+        {{ ch.creator.username }}
+      {% endif %}
+    </div>
+
+    {# 구분선 #}
+    <div style="height:1px;background:#e5e7eb;margin:.7rem 0 .8rem;"></div>
+
+    {# 한줄 소개 (20자 제한, 왼쪽 정렬) #}
+    <p style="margin:0;color:#374151;font-size:.9rem;text-align:left;padding-left:.35rem;">
+      {% if ch.description|length > 20 %}
+        {{ ch.description|slice:":20" }}...
+      {% else %}
+        {{ ch.description }}
+      {% endif %}
+    </p>
+  </div>
+  {% endfor %}
+</div>
+
+{# 페이지네이션 #}
+<div style="margin-top:1.5rem; display:flex; gap:.5rem; justify-content:center; align-items:center;">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if current_genre %}&genre={{ current_genre }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       style="padding:.4rem .8rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:#374151;">이전</a>
+  {% endif %}
+  <span style="color:#6b7280;">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if current_genre %}&genre={{ current_genre }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       style="padding:.4rem .8rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:#374151;">다음</a>
+  {% endif %}
+</div>
+
+{% else %}
+<p>공개 캐릭터가 없습니다.</p>
+{% endif %}
+
+{% endblock %}
