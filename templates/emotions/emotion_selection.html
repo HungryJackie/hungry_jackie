@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}오늘의 감정 선택 - Hungry Jackie{% endblock %}
+
+{% block extra_head %}
+<style>
+    .emotion-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    
+    .emotion-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .emotion-header h2 {
+        color: #111827;
+        font-size: 24px;
+        margin-bottom: 0.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .emotion-icon {
+        width: 32px;
+        height: 32px;
+        color: #6366f1;
+    }
+    
+    .emotion-header p {
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    
+    .emotion-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .emotion-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 15px;
+        border: 2px solid #e5e7eb;
+        border-radius: 16px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .emotion-btn:hover {
+        border-color: #6366f1;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .emotion-btn.selected {
+        border-color: #6366f1;
+        background: #f0f9ff;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .emotion-emoji {
+        font-size: 32px;
+        margin-bottom: 8px;
+    }
+    
+    .emotion-name {
+        font-weight: 600;
+        font-size: 16px;
+        color: #374151;
+        margin-bottom: 4px;
+    }
+    
+    .emotion-desc {
+        font-size: 12px;
+        color: #6b7280;
+        text-align: center;
+        line-height: 1.3;
+    }
+    
+    .next-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .next-btn.active {
+        opacity: 1;
+        cursor: pointer;
+    }
+    
+    .next-btn.active:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .back-link a {
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.3s;
+    }
+    
+    .back-link a:hover {
+        color: #374151;
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="emotion-container">
+    <div class="emotion-header">
+        <h2>
+            <svg class="emotion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+            {{ page_title }}
+        </h2>
+        <p>현재 감정 상태를 선택해주시면 맞춤 콘텐츠를 추천해드릴게요</p>
+    </div>
+    
+    <div class="emotion-grid">
+        {% for emotion in emotions %}
+            <div class="emotion-btn" data-emotion-id="{{ emotion.id }}" data-emotion-name="{{ emotion.name }}">
+                <div class="emotion-emoji">{{ emotion.emoji }}</div>
+                <div class="emotion-name">{{ emotion.name }}</div>
+                <div class="emotion-desc">{{ emotion.sub_description|default:emotion.description|truncatechars:20 }}</div>
+            </div>
+        {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; color: #6b7280; padding: 2rem;">
+                <p>아직 감정 데이터가 등록되지 않았습니다.</p>
+                <p>관리자에게 문의하세요.</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <button class="next-btn" id="nextBtn">콘텐츠 추천받기</button>
+    
+    <div class="back-link">
+        <a href="{% url 'home' %}">← 메인으로 돌아가기</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const emotionBtns = document.querySelectorAll('.emotion-btn');
+        const nextBtn = document.getElementById('nextBtn');
+        let selectedEmotionId = null;
+        
+        emotionBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 기존 선택 해제
+                emotionBtns.forEach(b => b.classList.remove('selected'));
+                
+                // 현재 버튼 선택
+                this.classList.add('selected');
+                selectedEmotionId = this.dataset.emotionId;
+                
+                // 다음 버튼 활성화
+                nextBtn.classList.add('active');
+                nextBtn.disabled = false;
+            });
+        });
+        
+        nextBtn.addEventListener('click', function() {
+            if (selectedEmotionId) {
+                // 추천 결과 페이지로 이동
+                window.location.href = `{% url 'emotions:get_recommendations' 0 %}`.replace('0', selectedEmotionId);
+            }
+        });
+    });
+</script>
+{% endblock %}
