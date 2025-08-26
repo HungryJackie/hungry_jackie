@@ -63,9 +63,15 @@
 
   /* 프리뷰 카드(우측) */
   .pv-head{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
-  .avatar{width:48px;height:48px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#f3f4f6;display:flex;align-items:center;justify-content:center}
-  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .avatar{
+    width:56px;height:56px;border-radius:12px;overflow:hidden;
+    border:1px solid var(--line);background:#ffffff;display:flex;
+    align-items:center;justify-content:center;padding:4px; /* 가장자리 여유 */
+  }
+  /* 이미지가 잘리지 않도록 contain */
+  .avatar img{width:100%;height:100%;object-fit:contain;display:block;background:#ffffff}
   .pv-name{font-weight:800}
+
   .bubble{background:var(--soft);border:1px solid var(--line);padding:.75rem 1rem;border-radius:14px;display:inline-block;margin:.35rem 0}
   .muted{color:var(--muted);font-size:.9rem}
 
@@ -95,15 +101,9 @@
 
   <!-- 단계 표시 -->
   <div class="steps">
-    <div class="step active">
-      <div class="n">1</div><div><div><b>기본</b> <small>이미지·이름·장르</small></div></div>
-    </div>
-    <div class="step">
-      <div class="n">2</div><div><div><b>성격/말투</b> <small>배경 포함</small></div></div>
-    </div>
-    <div class="step">
-      <div class="n">3</div><div><div><b>태그·공개</b> <small>확인 후 {% if mode == 'edit' %}저장{% else %}생성{% endif %}</small></div></div>
-    </div>
+    <div class="step active"><div class="n">1</div><div><div><b>기본</b> <small>이미지·이름·장르</small></div></div></div>
+    <div class="step"><div class="n">2</div><div><div><b>성격/말투</b> <small>배경 포함</small></div></div></div>
+    <div class="step"><div class="n">3</div><div><div><b>태그·공개</b> <small>확인 후 {% if mode == 'edit' %}저장{% else %}생성{% endif %}</small></div></div></div>
   </div>
 
   <form id="charForm" method="post" enctype="multipart/form-data" class="grid">
@@ -164,14 +164,10 @@
         <!-- 공개 범위: 공개/비공개 -->
         <div class="field">
           <label class="label">공개 범위</label>
-
-          <!-- 토글 세그먼트 -->
           <div class="seg" role="tablist" aria-label="visibility">
             <a href="#" class="seg-public"  data-v="public"  onclick="setVis(event,'public')">공개</a>
             <a href="#" class="seg-private" data-v="private" onclick="setVis(event,'private')">비공개</a>
           </div>
-
-          <!-- 실제 폼 필드(렌더하되 숨김) -->
           <div style="display:none">
             {{ form.visibility }}
           </div>
@@ -229,7 +225,7 @@
       </section>
     </div>
 
-    <!-- 우측: 채팅 미리보기 -->
+    <!-- 우측: 채팅 미리보기 (한 줄 소개 제거 + 이미지 contain) -->
     <aside class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
         <h3>채팅 미리보기</h3>
@@ -246,7 +242,7 @@
         </div>
         <div>
           <div class="pv-name" id="pv-name">{{ form.instance.name|default:"이름 미정" }}</div>
-          <div class="muted" id="pv-desc">{{ form.instance.description|default:"한 줄 소개가 여기에 표시됩니다." }}</div>
+          {# 한 줄 소개는 프리뷰에서 제거했습니다 #}
         </div>
       </div>
 
@@ -272,7 +268,7 @@
     window.scrollTo({top:0, behavior:'smooth'});
   }
 
-  /* 공개범위 UI <-> 실제 폼 필드(id_visibility) 동기화 */
+  /* 공개범위 UI <-> 실제 폼 필드 동기화 */
   function syncSegFromValue(v){
     const pub = document.querySelector('.seg-public');
     const pri = document.querySelector('.seg-private');
@@ -282,30 +278,20 @@
   }
   function setVis(e,v){
     e.preventDefault();
-    const sel = document.getElementById('id_visibility'); // Django가 부여하는 id
-    if(sel){
-      sel.value = v;
-      syncSegFromValue(v);
-    }
+    const sel = document.getElementById('id_visibility');
+    if(sel){ sel.value = v; syncSegFromValue(v); }
   }
-
-  /* 초기 공개범위 반영 (폼의 현재 값 기준) */
   (function initVisibility(){
     const sel = document.getElementById('id_visibility');
-    const v = sel?.value || 'public';
-    syncSegFromValue(v);
+    syncSegFromValue(sel?.value || 'public');
   })();
 
-  /* 실시간 미리보기 바인딩 */
+  /* 실시간 미리보기 바인딩 (이름/말투만 반영) */
   const nameInput  = document.getElementById('{{ form.name.id_for_label }}') || document.querySelector('[name="name"]');
-  const descInput  = document.getElementById('{{ form.description.id_for_label }}') || document.querySelector('[name="description"]');
   const styleInput = document.getElementById('{{ form.speaking_style.id_for_label }}') || document.querySelector('[name="speaking_style"]');
 
   nameInput?.addEventListener('input', e=>{
     document.getElementById('pv-name').textContent = e.target.value || '이름 미정';
-  });
-  descInput?.addEventListener('input', e=>{
-    document.getElementById('pv-desc').textContent = e.target.value || '한 줄 소개가 여기에 표시됩니다.';
   });
   styleInput?.addEventListener('input', e=>{
     document.getElementById('pv-b2').textContent = e.target.value
