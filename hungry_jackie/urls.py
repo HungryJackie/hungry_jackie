@@ -32,6 +32,9 @@ urlpatterns = [
     
     # 프로필 관련 URLs
     path('profile/', include('profiles.urls')),
+
+    # 감정 분석 시스템 URLs
+    path('emotions/', include('emotions.urls')),
     
     # 메인 페이지
     path('', views.home, name='home'),

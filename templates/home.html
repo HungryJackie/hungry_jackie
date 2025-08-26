@@ -20,11 +20,27 @@
                 </div>
             </div>
             <h1>안녕하세요, {{ user.profile.display_name }}님!</h1>
-            <p>당신만의 특별한 이야기를 찾아드릴 준비가 되었습니다.<br>
-            감정 상태에 맞는 맞춤형 콘텐츠로 마음을 위로해드릴게요.</p>
+            <p>오늘은 어떤 기분이신가요?<br>
+            감정 상태에 맞는 맞춤형 콘텐츠를 추천해드릴게요.</p>
             
-            <!-- 향후 바이브라 검사 및 콘텐츠 추천 기능이 들어갈 자리 -->
-            <div style="margin-top: 2.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+            <!-- 오늘의 감정 선택 섹션 -->
+            <div style="margin: 2.5rem 0;">
+                <a href="{% url 'emotions:emotion_selection' %}" 
+                   style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1.25rem 2.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; text-decoration: none; border-radius: 1rem; font-weight: 600; font-size: 1.1rem; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);"
+                   onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(99, 102, 241, 0.4)';"
+                   onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 4px 15px rgba(99, 102, 241, 0.3)';">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                        <line x1="9" y1="9" x2="9.01" y2="9"/>
+                        <line x1="15" y1="9" x2="15.01" y2="9"/>
+                    </svg>
+                    오늘의 감정 상태 선택하기
+                </a>
+            </div>
+            
+            <!-- 기존 상태 카드들 -->
+            <div style="margin-top: 2.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
                 <div style="padding: 1.5rem; background-color: #f0f9ff; border-radius: 0.75rem; border: 1px solid #bfdbfe;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6">
@@ -35,6 +51,16 @@
                     <p style="color: #64748b; font-size: 0.95rem;">닉네임과 프로필 이미지 설정이 완료되었습니다!</p>
                 </div>
                 
+                <div style="padding: 1.5rem; background-color: #f0fdf4; border-radius: 0.75rem; border: 1px solid #bbf7d0;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        <p style="color: #10b981; font-weight: 600; font-size: 1rem;">감정 분석 준비</p>
+                    </div>
+                    <p style="color: #64748b; font-size: 0.95rem;">오늘의 기분을 선택하고 맞춤 콘텐츠를 받아보세요!</p>
+                </div>
+                
                 <div style="padding: 1.5rem; background-color: #fef3c7; border-radius: 0.75rem; border: 1px solid #fbbf24;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b">
@@ -42,7 +68,7 @@
                         </svg>
                         <p style="color: #f59e0b; font-weight: 600; font-size: 1rem;">다음 단계</p>
                     </div>
-                    <p style="color: #64748b; font-size: 0.95rem;">바이브라 심리검사를 통해 맞춤 콘텐츠를 받아보세요! (준비 중)</p>
+                    <p style="color: #64748b; font-size: 0.95rem;">바이브라 심리검사를 통해 더 정확한 분석을 받아보세요! (준비 중)</p>
                 </div>
             </div>
             
