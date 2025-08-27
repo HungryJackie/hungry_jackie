@@ -1,602 +1,251 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}{{ conversation.character.name }}와의 대화 - Hungry Jackie{% endblock %}
 
 {% block extra_head %}
 <style>
-  :root {
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
-    --bg: #f8fafc;
-    --panel: #ffffff;
-    --text: #1e293b;
-    --text-light: #64748b;
-    --border: #e2e8f0;
-    --user-bubble: #6366f1;
-    --char-bubble: #f1f5f9;
-    --shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
+  :root { --primary:#6366f1; --primary-dark:#4f46e5; --bg:#f8fafc; --panel:#fff; --text:#1e293b; --text-light:#64748b; --border:#e2e8f0; --user-bubble:#6366f1; --char-bubble:#f1f5f9; --shadow:0 1px 3px rgba(0,0,0,.1); }
 
-  /* chat-page는 base.html에서 이미 적절한 높이로 설정됨 */
-  .chat-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%; /* chat-page의 전체 높이 사용 */
-    background: var(--panel);
-    max-width: 800px;
-    margin: 0 auto;
-    overflow: hidden;
-  }
+  .chat-container{display:flex;flex-direction:column;height:100%;background:var(--panel);max-width:800px;margin:0 auto;overflow:hidden}
+  .chat-header{background:var(--panel);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;gap:.75rem;box-shadow:var(--shadow);flex-shrink:0;z-index:10}
+  .char-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid var(--border);background:#f8fafc;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .char-avatar img{width:100%;height:100%;object-fit:cover}
+  .char-info h2{font-size:1.1rem;font-weight:600;color:var(--text);margin:0 0 .25rem}
+  .char-status{font-size:.85rem;color:var(--text-light);display:flex;align-items:center;gap:.25rem}
+  .status-dot{width:6px;height:6px;background:#22c55e;border-radius:50%}
+  .credit-badge{margin-left:auto;background:linear-gradient(135deg,var(--primary),#8b5cf6);color:#fff;padding:.5rem .75rem;border-radius:20px;font-size:.8rem;font-weight:600;white-space:nowrap}
 
-  /* 채팅 헤더 */
-  .chat-header {
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    box-shadow: var(--shadow);
-    flex-shrink: 0; /* 헤더가 축소되지 않도록 */
-    z-index: 10;
-  }
+  .messages-container{flex:1;overflow-y:auto;padding:1rem 0;scroll-behavior:smooth}
+  .message-group{display:flex;margin-bottom:1rem;padding:0 1.5rem}
+  .message-group.user{justify-content:flex-end}
+  .message-group.character{justify-content:flex-start}
 
-  .char-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 2px solid var(--border);
-    background: #f8fafc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
+  .message-avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1.5px solid var(--border);background:#f8fafc;margin-right:.75rem;flex-shrink:0;align-self:flex-end}
+  .message-group.user .message-avatar{order:2;margin-right:0;margin-left:.75rem}
+  .message-avatar img{width:100%;height:100%;object-fit:cover}
 
-  .char-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+  .user-avatar-placeholder{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.9rem}
 
-  .char-info h2 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text);
-    margin: 0 0 0.25rem 0;
-  }
+  .message-content{max-width:70%;display:flex;flex-direction:column}
+  .message-group.user .message-content{align-items:flex-end}
+  .message-group.character .message-content{align-items:flex-start}
 
-  .char-status {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
+  .message-sender{font-size:.8rem;color:var(--text-light);margin-bottom:.25rem;padding:0 .75rem}
+  .message-bubble{padding:.75rem 1rem;border-radius:18px;font-size:.95rem;line-height:1.4;word-wrap:break-word;position:relative;max-width:100%}
+  .message-group.user .message-bubble{background:var(--user-bubble);color:#fff;border-bottom-right-radius:6px}
+  .message-group.character .message-bubble{background:var(--char-bubble);color:var(--text);border-bottom-left-radius:6px;border:1px solid var(--border)}
+  .message-time{font-size:.75rem;color:var(--text-light);margin-top:.25rem;padding:0 .75rem}
 
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    background: #22c55e;
-    border-radius: 50%;
-  }
+  .input-container{background:var(--panel);border-top:1px solid var(--border);padding:1rem 1.5rem;display:flex;gap:.75rem;align-items:flex-end;flex-shrink:0}
+  .message-input{flex:1;border:1px solid var(--border);border-radius:20px;padding:.75rem 1rem;font-size:.95rem;resize:none;max-height:120px;min-height:44px;background:#f8fafc;transition:all .2s}
+  .message-input:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+  .send-button{background:var(--primary);color:#fff;border:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+  .send-button:hover{background:var(--primary-dark);transform:scale(1.05)}
+  .send-button:active{transform:scale(.95)}
+  .send-button:disabled{background:#cbd5e1;cursor:not-allowed;transform:none}
 
-  /* 크레딧 표시 */
-  .credit-badge {
-    margin-left: auto;
-    background: linear-gradient(135deg, var(--primary), #8b5cf6);
-    color: white;
-    padding: 0.5rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    white-space: nowrap;
-  }
+  .system-message{text-align:center;margin:1rem 1.5rem;padding:.5rem 1rem;background:#fef3c7;color:#92400e;border-radius:12px;font-size:.85rem;border:1px solid #fbbf24}
 
-  /* 메시지 영역 */
-  .messages-container {
-    flex: 1; /* 남은 공간 모두 사용 */
-    overflow-y: auto;
-    padding: 1rem 0;
-    scroll-behavior: smooth;
-  }
+  .typing-indicator{display:none;padding:0 1.5rem;margin-bottom:1rem}
+  .typing-bubble{background:var(--char-bubble);border:1px solid var(--border);border-radius:18px;padding:1rem;display:inline-flex;align-items:center;gap:.25rem}
+  .typing-dot{width:6px;height:6px;background:var(--text-light);border-radius:50%;animation:typing 1.4s infinite}
+  .typing-dot:nth-child(2){animation-delay:.2s}
+  .typing-dot:nth-child(3){animation-delay:.4s}
+  @keyframes typing{0%,60%,100%{opacity:.3}30%{opacity:1}}
 
-  .message-group {
-    display: flex;
-    margin-bottom: 1rem;
-    padding: 0 1.5rem;
-  }
+  @media (max-width:768px){.message-content{max-width:85%}.input-container{padding:1rem}.messages-container{padding:.5rem 0}.message-group{padding:0 1rem}}
 
-  .message-group.user {
-    justify-content: flex-end;
-  }
-
-  .message-group.character {
-    justify-content: flex-start;
-  }
-
-  .message-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 1.5px solid var(--border);
-    background: #f8fafc;
-    margin-right: 0.75rem;
-    flex-shrink: 0;
-    align-self: flex-end;
-  }
-
-  .message-group.user .message-avatar {
-    order: 2;
-    margin-right: 0;
-    margin-left: 0.75rem;
-  }
-
-  .message-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .user-avatar-placeholder {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), #8b5cf6);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-
-  .message-content {
-    max-width: 70%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .message-group.user .message-content {
-    align-items: flex-end;
-  }
-
-  .message-group.character .message-content {
-    align-items: flex-start;
-  }
-
-  .message-sender {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    margin-bottom: 0.25rem;
-    padding: 0 0.75rem;
-  }
-
-  .message-bubble {
-    padding: 0.75rem 1rem;
-    border-radius: 18px;
-    font-size: 0.95rem;
-    line-height: 1.4;
-    word-wrap: break-word;
-    position: relative;
-    max-width: 100%;
-  }
-
-  .message-group.user .message-bubble {
-    background: var(--user-bubble);
-    color: white;
-    border-bottom-right-radius: 6px;
-  }
-
-  .message-group.character .message-bubble {
-    background: var(--char-bubble);
-    color: var(--text);
-    border-bottom-left-radius: 6px;
-    border: 1px solid var(--border);
-  }
-
-  .message-time {
-    font-size: 0.75rem;
-    color: var(--text-light);
-    margin-top: 0.25rem;
-    padding: 0 0.75rem;
-  }
-
-  /* 입력 영역 */
-  .input-container {
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-    padding: 1rem 1.5rem;
-    display: flex;
-    gap: 0.75rem;
-    align-items: flex-end;
-    flex-shrink: 0; /* 입력 영역이 축소되지 않도록 */
-  }
-
-  .message-input {
-    flex: 1;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    resize: none;
-    max-height: 120px;
-    min-height: 44px;
-    background: #f8fafc;
-    transition: all 0.2s;
-  }
-
-  .message-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-  }
-
-  .send-button {
-    background: var(--primary);
-    color: white;
-    border: none;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex-shrink: 0;
-  }
-
-  .send-button:hover {
-    background: var(--primary-dark);
-    transform: scale(1.05);
-  }
-
-  .send-button:active {
-    transform: scale(0.95);
-  }
-
-  .send-button:disabled {
-    background: #cbd5e1;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  /* 시스템 메시지 */
-  .system-message {
-    text-align: center;
-    margin: 1rem 1.5rem;
-    padding: 0.5rem 1rem;
-    background: #fef3c7;
-    color: #92400e;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    border: 1px solid #fbbf24;
-  }
-
-  /* 타이핑 인디케이터 */
-  .typing-indicator {
-    display: none;
-    padding: 0 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .typing-bubble {
-    background: var(--char-bubble);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 1rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .typing-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--text-light);
-    border-radius: 50%;
-    animation: typing 1.4s infinite;
-  }
-
-  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-  @keyframes typing {
-    0%, 60%, 100% { opacity: 0.3; }
-    30% { opacity: 1; }
-  }
-
-  /* 반응형 */
-  @media (max-width: 768px) {
-    .message-content {
-      max-width: 85%;
-    }
-
-    .input-container {
-      padding: 1rem;
-    }
-
-    .messages-container {
-      padding: 0.5rem 0;
-    }
-
-    .message-group {
-      padding: 0 1rem;
-    }
-  }
-
-  /* 스크롤바 스타일 */
-  .messages-container::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .messages-container::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .messages-container::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-  }
-
-  .messages-container::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-  }
+  .messages-container::-webkit-scrollbar{width:6px}
+  .messages-container::-webkit-scrollbar-track{background:transparent}
+  .messages-container::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+  .messages-container::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- 채팅 페이지는 전체 높이 사용 -->
 <div class="chat-page">
-  <!-- 채팅 메시지는 fixed position으로 표시 -->
-  {% if messages %}
-    <div style="position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 1000; max-width: 400px;">
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
 
-  <div class="chat-container">
-  <!-- 채팅 헤더 -->
-  <div class="chat-header">
-    <div class="char-avatar">
-      {% if conversation.character.character_image %}
-        <img src="{{ conversation.character.character_image.url }}" alt="{{ conversation.character.name }}">
-      {% else %}
-        <img src="{% static 'images/profiles/default_2.png' %}" alt="{{ conversation.character.name }}">
-      {% endif %}
-    </div>
-    <div class="char-info">
-      <h2>{{ conversation.character.name }}</h2>
-      <div class="char-status">
-        <span class="status-dot"></span>
-        온라인
-      </div>
-    </div>
-    <div class="credit-badge">
-      💎 {{ user_credit.total_credits }}
-    </div>
-  </div>
-
-  <!-- 메시지 영역 -->
-  <div class="messages-container" id="messagesContainer">
-    {% if not messages %}
-      <div class="system-message">
-        {{ conversation.character.name }}와의 첫 대화를 시작해보세요! 👋
+  {# ── Django 플래시 메시지(알림) 전용 영역 ── #}
+  {% with django_messages=messages %}
+    {% if django_messages %}
+      <div style="position:fixed; top:80px; left:50%; transform:translateX(-50%); z-index:1000; max-width:400px;">
+        {% for m in django_messages %}
+          <div class="alert alert-{{ m.tags }}">{{ m }}</div>
+        {% endfor %}
       </div>
     {% endif %}
+  {% endwith %}
 
-    {% for message in messages %}
-      <div class="message-group {{ message.sender }}">
-        {% if message.sender == 'character' %}
-          <div class="message-avatar">
-            {% if conversation.character.character_image %}
-              <img src="{{ conversation.character.character_image.url }}" alt="{{ conversation.character.name }}">
-            {% else %}
-              <img src="{% static 'images/profiles/default_2.png' %}" alt="{{ conversation.character.name }}">
-            {% endif %}
-          </div>
+  <div class="chat-container">
+
+    <!-- 헤더 -->
+    <div class="chat-header">
+      <div class="char-avatar">
+        {% if conversation.character.character_image %}
+          <img src="{{ conversation.character.character_image.url }}" alt="{{ conversation.character.name }}">
         {% else %}
-          <div class="user-avatar-placeholder">
-            {{ conversation.user.profile.display_name|first|upper }}
-          </div>
+          <img src="{% static 'images/profiles/default_2.png' %}" alt="{{ conversation.character.name }}">
         {% endif %}
+      </div>
+      <div class="char-info">
+        <h2>{{ conversation.character.name }}</h2>
+        <div class="char-status"><span class="status-dot"></span>온라인</div>
+      </div>
+      <div class="credit-badge">💎 {{ user_credit.total_credits }}</div>
+    </div>
 
-        <div class="message-content">
-          <div class="message-sender">
-            {% if message.sender == 'user' %}
-              {{ conversation.user.profile.display_name }}
-            {% elif message.sender == 'character' %}
-              {{ conversation.character.name }}
-            {% else %}
-              시스템
-            {% endif %}
-          </div>
-          <div class="message-bubble">
-            {{ message.content }}
-          </div>
-          <div class="message-time">
-            {{ message.timestamp|date:"H:i" }}
+    <!-- 메시지 리스트 -->
+    <div class="messages-container" id="messagesContainer">
+      {% if chat_messages|length == 0 %}
+        <div class="system-message">{{ conversation.character.name }}와의 첫 대화를 시작해보세요! 👋</div>
+      {% endif %}
+
+      {% for m in chat_messages %}
+        <div class="message-group {{ m.sender }}">
+          {% if m.sender == 'character' %}
+            <div class="message-avatar">
+              {% if conversation.character.character_image %}
+                <img src="{{ conversation.character.character_image.url }}" alt="{{ conversation.character.name }}">
+              {% else %}
+                <img src="{% static 'images/profiles/default_2.png' %}" alt="{{ conversation.character.name }}">
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="user-avatar-placeholder">{{ conversation.user.profile.display_name|first|upper }}</div>
+          {% endif %}
+
+          <div class="message-content">
+            <div class="message-sender">
+              {% if m.sender == 'user' %}
+                {{ conversation.user.profile.display_name }}
+              {% elif m.sender == 'character' %}
+                {{ conversation.character.name }}
+              {% else %}시스템{% endif %}
+            </div>
+            <div class="message-bubble">{{ m.content }}</div>
+            <div class="message-time">{{ m.timestamp|date:"H:i" }}</div>
           </div>
         </div>
-      </div>
-    {% endfor %}
+      {% endfor %}
 
-    <!-- 타이핑 인디케이터 -->
-    <div class="typing-indicator" id="typingIndicator">
-      <div class="typing-bubble">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
+      <!-- 타이핑 인디케이터 -->
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-bubble">
+          <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 입력 영역 -->
-  <div class="input-container">
-    <textarea 
-      id="messageInput" 
-      class="message-input" 
-      placeholder="{{ conversation.character.name }}에게 메시지를 보내세요..."
-      rows="1"></textarea>
-    <button id="sendButton" class="send-button">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <line x1="22" y1="2" x2="11" y2="13"></line>
-        <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
-      </svg>
-    </button>
-  </div>
+    <!-- 입력 영역 -->
+    <div class="input-container">
+      <textarea id="messageInput" class="message-input" placeholder="{{ conversation.character.name }}에게 메시지를 보내세요..." rows="1"></textarea>
+      <button id="sendButton" class="send-button" aria-label="전송">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+        </svg>
+      </button>
+    </div>
+
   </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const messageInput = document.getElementById('messageInput');
   const sendButton = document.getElementById('sendButton');
   const messagesContainer = document.getElementById('messagesContainer');
   const typingIndicator = document.getElementById('typingIndicator');
   let isLoading = false;
 
-  // 자동 스크롤
-  function scrollToBottom() {
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  }
+  const characterName = '{{ conversation.character.name|escapejs }}';
+  const userDisplayName = '{{ conversation.user.profile.display_name|escapejs }}';
+  const characterAvatar = `{% if conversation.character.character_image %}{{ conversation.character.character_image.url|escapejs }}{% else %}{% static 'images/profiles/default_2.png' %}{% endif %}`;
 
-  // 초기 스크롤
+  function scrollToBottom(){ messagesContainer.scrollTop = messagesContainer.scrollHeight; }
   scrollToBottom();
 
-  // 텍스트에리어 자동 크기 조절
-  messageInput.addEventListener('input', function() {
+  messageInput.addEventListener('input', function(){
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 120) + 'px';
   });
 
-  // 메시지 추가 함수
-  function addMessage(sender, content, senderName, avatarSrc) {
-    const messageGroup = document.createElement('div');
-    messageGroup.className = `message-group ${sender} new-message`;
+  function escapeHTML(s){
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  function addMessage(sender, content, senderName, avatarSrc){
+    const group = document.createElement('div');
+    group.className = `message-group ${sender} new-message`;
 
     let avatarHTML = '';
-    if (sender === 'character') {
-      avatarHTML = `
-        <div class="message-avatar">
-          <img src="${avatarSrc}" alt="${senderName}">
-        </div>
-      `;
-    } else if (sender === 'user') {
-      const initial = senderName.charAt(0).toUpperCase();
-      avatarHTML = `
-        <div class="user-avatar-placeholder">
-          ${initial}
-        </div>
-      `;
+    if(sender === 'character'){
+      avatarHTML = `<div class="message-avatar"><img src="${avatarSrc}" alt="${senderName}"></div>`;
+    }else{
+      const initial = (senderName||'').charAt(0).toUpperCase();
+      avatarHTML = `<div class="user-avatar-placeholder">${initial}</div>`;
     }
 
-    const currentTime = new Date().toLocaleTimeString('ko-KR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-
-    messageGroup.innerHTML = `
+    const now = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+    group.innerHTML = `
       ${avatarHTML}
       <div class="message-content">
-        <div class="message-sender">${senderName}</div>
-        <div class="message-bubble">${content}</div>
-        <div class="message-time">${currentTime}</div>
+        <div class="message-sender">${escapeHTML(senderName)}</div>
+        <div class="message-bubble">${escapeHTML(content)}</div>
+        <div class="message-time">${now}</div>
       </div>
     `;
-
-    // 타이핑 인디케이터 전에 삽입
-    messagesContainer.insertBefore(messageGroup, typingIndicator);
+    messagesContainer.insertBefore(group, typingIndicator);
     scrollToBottom();
   }
 
-  // 타이핑 인디케이터 표시/숨김
-  function showTyping() {
-    typingIndicator.style.display = 'block';
-    scrollToBottom();
-  }
+  function showTyping(){ typingIndicator.style.display='block'; scrollToBottom(); }
+  function hideTyping(){ typingIndicator.style.display='none'; }
 
-  function hideTyping() {
-    typingIndicator.style.display = 'none';
-  }
-
-  // 메시지 전송
-  async function sendMessage() {
-    const message = messageInput.value.trim();
-    if (!message || isLoading) return;
+  async function sendMessage(){
+    const msg = messageInput.value.trim();
+    if(!msg || isLoading) return;
 
     isLoading = true;
-    sendButton.disabled = true;
-    messageInput.disabled = true;
+    sendButton.disabled = true; messageInput.disabled = true;
 
-    // 사용자 메시지 추가
-    const userDisplayName = '{{ conversation.user.profile.display_name|escapejs }}';
-    addMessage('user', message, userDisplayName);
-    
-    // 입력창 초기화
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
-
-    // 타이핑 인디케이터 표시
+    addMessage('user', msg, userDisplayName, null);
+    messageInput.value=''; messageInput.style.height='auto';
     showTyping();
 
-    try {
-      const response = await fetch("{% url 'characters:send_message' conversation.id %}", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({ message: message })
+    try{
+      const res = await fetch("{% url 'characters:send_message' conversation.id %}", {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+        body:JSON.stringify({message: msg})
       });
-
-      const data = await response.json();
+      const data = await res.json();
       hideTyping();
 
-      if (data.success) {
-        // AI 응답 추가
-        const characterName = '{{ conversation.character.name|escapejs }}';
-        const characterAvatar = '{{ conversation.character.character_image.url|default:"/static/images/profiles/default_2.png"|escapejs }}';
-        addMessage('character', data.ai_response, characterName, characterAvatar);
-        
-        // 크레딧 업데이트
-        if (data.remaining_credits !== undefined) {
-          const creditBadge = document.querySelector('.credit-badge');
-          creditBadge.textContent = `💎 ${data.remaining_credits}`;
+      if(data.success){
+        addMessage('character', data.ai_response || '', characterName, characterAvatar);
+        if (typeof data.remaining_credits !== 'undefined'){
+          const badge = document.querySelector('.credit-badge');
+          if(badge) badge.textContent = `💎 ${data.remaining_credits}`;
         }
-      } else {
-        // 에러 메시지 표시
-        addMessage('character', data.error || '죄송합니다. 오류가 발생했습니다.', '{{ conversation.character.name|escapejs }}', '{{ conversation.character.character_image.url|default:"/static/images/profiles/default_2.png"|escapejs }}');
+      }else{
+        addMessage('character', data.error || '죄송합니다. 오류가 발생했습니다.', characterName, characterAvatar);
       }
-    } catch (error) {
+    }catch(e){
+      console.error(e);
       hideTyping();
-      console.error('Error:', error);
-      addMessage('character', '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', '{{ conversation.character.name|escapejs }}', '{{ conversation.character.character_image.url|default:"/static/images/profiles/default_2.png"|escapejs }}');
-    } finally {
+      addMessage('character', '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', characterName, characterAvatar);
+    }finally{
       isLoading = false;
-      sendButton.disabled = false;
-      messageInput.disabled = false;
-      messageInput.focus();
+      sendButton.disabled = false; messageInput.disabled = false; messageInput.focus();
     }
   }
 
-  // 이벤트 리스너
   sendButton.addEventListener('click', sendMessage);
-
-  messageInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-
-  // 포커스
+  messageInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }});
   messageInput.focus();
 });
 </script>
