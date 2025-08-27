@@ -1,110 +1,120 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1 style="margin-bottom:1rem;">내 캐릭터</h1>
-
-{# 🔍 검색 + 정렬 바 #}
-<form method="get" style="margin-bottom:1rem; display:flex; gap:.5rem; flex-wrap:wrap;">
-  <input type="text" name="search" value="{{ request.GET.search|default:'' }}" placeholder="검색"
-         style="flex:1; padding:.5rem 1rem; border:1px solid #e5e7eb; border-radius:.5rem;">
-  
-  <select name="sort" style="padding:.5rem 1rem; border:1px solid #e5e7eb; border-radius:.5rem;">
-    <option value="">정렬 없음</option>
-    <option value="rating" {% if request.GET.sort == 'rating' %}selected{% endif %}>평점순</option>
-    <option value="created" {% if request.GET.sort == 'created' %}selected{% endif %}>생성일순</option>
-  </select>
-
-  <button type="submit"
-          style="padding:.5rem 1rem; border-radius:.5rem; background:#6366f1; color:#fff; border:none;">
-    필터
-  </button>
-</form>
-
-{% if page_obj.object_list %}
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;">
-  {% for ch in page_obj.object_list %}
-  <div style="border:1px solid #e5e7eb;border-radius:.75rem;padding:1rem;background:#fff;text-align:center;">
-
-    {# 캐릭터 이미지 #}
-    {% if ch.character_image %}
-      <a href="{% url 'characters:character_detail' ch.id %}">
-        <img src="{{ ch.character_image.url }}" alt="{{ ch.name }}"
-             style="width:100px;height:100px;object-fit:cover;margin:0 auto .75rem;display:block;border-radius:50%;">
-      </a>
-    {% else %}
-      <div style="width:100px;height:100px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;">
-        <span style="font-size:2rem;color:#9ca3af;">?</span>
-      </div>
+<div class="container">
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
     {% endif %}
 
-    {# 캐릭터 이름 #}
-    <h3 style="margin:0 0 .35rem 0;font-size:1.1rem;font-weight:600;">
-      <a href="{% url 'characters:character_detail' ch.id %}" style="color:#111827;text-decoration:none;">
-        {{ ch.name }}
-      </a>
-    </h3>
+    <h1 style="margin-bottom:1rem;">내 캐릭터</h1>
 
-    {# 장르 + 공개 범위 #}
-    <div style="margin-bottom:.6rem; font-size:.85rem; color:#6b7280;">
-      <span style="display:inline-block;padding:.25rem .6rem;border-radius:9999px;background:#f3f4f6;color:#4b5563;font-size:.8rem;">
-        {{ ch.genre.name }}
-      </span>
-      ·
-      {% if ch.visibility == "public" %}
-        <span style="color:#2563eb;font-weight:500;">공개</span>
-      {% else %}
-        <span style="color:#dc2626;font-weight:500;">비공개</span>
+    {# 🔍 검색 + 정렬 바 #}
+    <form method="get" style="margin-bottom:1rem; display:flex; gap:.5rem; flex-wrap:wrap;">
+      <input type="text" name="search" value="{{ request.GET.search|default:'' }}" placeholder="검색"
+             style="flex:1; padding:.5rem 1rem; border:1px solid #e5e7eb; border-radius:.5rem;">
+      
+      <select name="sort" style="padding:.5rem 1rem; border:1px solid #e5e7eb; border-radius:.5rem;">
+        <option value="">정렬 없음</option>
+        <option value="rating" {% if request.GET.sort == 'rating' %}selected{% endif %}>평점순</option>
+        <option value="created" {% if request.GET.sort == 'created' %}selected{% endif %}>생성일순</option>
+      </select>
+
+      <button type="submit"
+              style="padding:.5rem 1rem; border-radius:.5rem; background:#6366f1; color:#fff; border:none;">
+        필터
+      </button>
+    </form>
+
+    {% if page_obj.object_list %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;">
+      {% for ch in page_obj.object_list %}
+      <div style="border:1px solid #e5e7eb;border-radius:.75rem;padding:1rem;background:#fff;text-align:center;">
+
+        {# 캐릭터 이미지 #}
+        {% if ch.character_image %}
+          <a href="{% url 'characters:character_detail' ch.id %}">
+            <img src="{{ ch.character_image.url }}" alt="{{ ch.name }}"
+                 style="width:100px;height:100px;object-fit:cover;margin:0 auto .75rem;display:block;border-radius:50%;">
+          </a>
+        {% else %}
+          <div style="width:100px;height:100px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;">
+            <span style="font-size:2rem;color:#9ca3af;">?</span>
+          </div>
+        {% endif %}
+
+        {# 캐릭터 이름 #}
+        <h3 style="margin:0 0 .35rem 0;font-size:1.1rem;font-weight:600;">
+          <a href="{% url 'characters:character_detail' ch.id %}" style="color:#111827;text-decoration:none;">
+            {{ ch.name }}
+          </a>
+        </h3>
+
+        {# 장르 + 공개 범위 #}
+        <div style="margin-bottom:.6rem; font-size:.85rem; color:#6b7280;">
+          <span style="display:inline-block;padding:.25rem .6rem;border-radius:9999px;background:#f3f4f6;color:#4b5563;font-size:.8rem;">
+            {{ ch.genre.name }}
+          </span>
+          ·
+          {% if ch.visibility == "public" %}
+            <span style="color:#2563eb;font-weight:500;">공개</span>
+          {% else %}
+            <span style="color:#dc2626;font-weight:500;">비공개</span>
+          {% endif %}
+        </div>
+
+        {# 구분선 #}
+        <div style="height:1px;background:#e5e7eb;margin:.7rem 0 .8rem;"></div>
+
+        {# 한줄 소개 (20자 제한, 왼쪽 정렬) #}
+        <p style="margin:0 0 .6rem 0;color:#374151;font-size:.9rem;text-align:left;padding-left:.35rem;">
+          {% if ch.description|length > 20 %}
+            {{ ch.description|slice:":20" }}...
+          {% else %}
+            {{ ch.description }}
+          {% endif %}
+        </p>
+
+        {# 평균 평점 & 생성일 #}
+        <div style="font-size:.85rem; color:#6b7280; text-align:left; padding-left:.35rem; margin-bottom:.6rem;">
+          평균 평점: {{ ch.average_rating }} ({{ ch.rating_count }}명)<br>
+          생성일: {{ ch.created_at|date:"Y-m-d" }}
+        </div>
+
+        {# 관리 버튼 #}
+        <div style="margin-top:.8rem; display:flex; gap:.5rem; justify-content:center;">
+          <a href="{% url 'characters:character_edit' ch.id %}"
+             style="padding:.4rem .8rem; border:1px solid #d1d5db; border-radius:.5rem; text-decoration:none; color:#374151; font-size:.85rem;">
+            수정
+          </a>
+          <a href="{% url 'characters:character_delete' ch.id %}"
+             style="padding:.4rem .8rem; border:1px solid #ef4444; background:#ef4444; border-radius:.5rem; text-decoration:none; color:white; font-size:.85rem;">
+            삭제
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {# 페이지네이션 #}
+    <div style="margin-top:1.5rem; display:flex; gap:.5rem; justify-content:center; align-items:center;">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&search={{ request.GET.search }}&sort={{ request.GET.sort }}"
+           style="padding:.4rem .8rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:#374151;">이전</a>
+      {% endif %}
+      <span style="color:#6b7280;">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&search={{ request.GET.search }}&sort={{ request.GET.sort }}"
+           style="padding:.4rem .8rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:#374151;">다음</a>
       {% endif %}
     </div>
 
-    {# 구분선 #}
-    <div style="height:1px;background:#e5e7eb;margin:.7rem 0 .8rem;"></div>
-
-    {# 한줄 소개 (20자 제한, 왼쪽 정렬) #}
-    <p style="margin:0 0 .6rem 0;color:#374151;font-size:.9rem;text-align:left;padding-left:.35rem;">
-      {% if ch.description|length > 20 %}
-        {{ ch.description|slice:":20" }}...
-      {% else %}
-        {{ ch.description }}
-      {% endif %}
-    </p>
-
-    {# 평균 평점 & 생성일 #}
-    <div style="font-size:.85rem; color:#6b7280; text-align:left; padding-left:.35rem; margin-bottom:.6rem;">
-      평균 평점: {{ ch.average_rating }} ({{ ch.rating_count }}명)<br>
-      생성일: {{ ch.created_at|date:"Y-m-d" }}
-    </div>
-
-    {# 관리 버튼 #}
-    <div style="margin-top:.8rem; display:flex; gap:.5rem; justify-content:center;">
-      <a href="{% url 'characters:character_edit' ch.id %}"
-         style="padding:.4rem .8rem; border:1px solid #d1d5db; border-radius:.5rem; text-decoration:none; color:#374151; font-size:.85rem;">
-        수정
-      </a>
-      <a href="{% url 'characters:character_delete' ch.id %}"
-         style="padding:.4rem .8rem; border:1px solid #ef4444; background:#ef4444; border-radius:.5rem; text-decoration:none; color:white; font-size:.85rem;">
-        삭제
-      </a>
-    </div>
-  </div>
-  {% endfor %}
+    {% else %}
+    <p>아직 만든 캐릭터가 없습니다. <a href="{% url 'characters:character_create' %}" style="color:#6366f1;">캐릭터 만들기</a></p>
+    {% endif %}
 </div>
-
-{# 페이지네이션 #}
-<div style="margin-top:1.5rem; display:flex; gap:.5rem; justify-content:center; align-items:center;">
-  {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}&search={{ request.GET.search }}&sort={{ request.GET.sort }}"
-       style="padding:.4rem .8rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:#374151;">이전</a>
-  {% endif %}
-  <span style="color:#6b7280;">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-  {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}&search={{ request.GET.search }}&sort={{ request.GET.sort }}"
-       style="padding:.4rem .8rem; border:1px solid #e5e7eb; border-radius:.5rem; text-decoration:none; color:#374151;">다음</a>
-  {% endif %}
-</div>
-
-{% else %}
-<p>아직 만든 캐릭터가 없습니다. <a href="{% url 'characters:character_create' %}" style="color:#6366f1;">캐릭터 만들기</a></p>
-{% endif %}
 
 {% endblock %}
