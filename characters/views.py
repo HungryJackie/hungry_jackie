@@ -222,15 +222,15 @@ def conversation_view(request, conversation_id):
         user=request.user
     )
 
-    # 메시지 목록
-    messages_qs = conversation.messages.order_by('timestamp')
+    # 대화 메시지 목록
+    chat_messages = conversation.messages.order_by('timestamp')
 
     # 사용자 크레딧 정보 (없으면 생성)
     user_credit, _ = UserCredit.objects.get_or_create(user=request.user)
 
     return render(request, 'characters/conversation.html', {
         'conversation': conversation,
-        'messages': messages_qs,
+        'chat_messages': chat_messages,  # ← 충돌 피하기 위해 이름 변경
         'user_credit': user_credit,
         'credit_cost': gemini_service.credit_cost,
     })
