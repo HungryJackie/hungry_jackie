@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}캐릭터 삭제 확인 - Hungry Jackie{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="max-width: 500px; margin: 3rem auto; background: white; border-radius: 1rem; padding: 2.5rem; box-shadow: 0 1px 3px rgba(0,0,0,.1); border: 1px solid #f3f4f6;">
+        
+        <!-- 경고 아이콘 -->
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="width: 80px; height: 80px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+            </div>
+            <h2 style="color: #111827; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">캐릭터 삭제 확인</h2>
+            <p style="color: #6b7280; line-height: 1.5;">이 작업은 되돌릴 수 없습니다.</p>
+        </div>
+
+        <!-- 캐릭터 정보 -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                {% if character.character_image %}
+                    <img src="{{ character.character_image.url }}" alt="{{ character.name }}"
+                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%; border: 2px solid #e5e7eb;">
+                {% else %}
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; border: 2px solid #e5e7eb;">
+                        <span style="font-size: 1.5rem; color: #9ca3af;">?</span>
+                    </div>
+                {% endif %}
+                
+                <div>
+                    <h3 style="color: #111827; font-size: 1.1rem; font-weight: 600; margin: 0 0 0.25rem;">{{ character.name }}</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem; margin: 0;">{{ character.genre.name }} · {{ character.total_conversations }}번의 대화</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 경고 메시지 -->
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.75rem; padding: 1rem; margin-bottom: 2rem;">
+            <div style="display: flex; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" style="flex-shrink: 0; margin-top: 0.125rem;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <div>
+                    <p style="color: #dc2626; font-weight: 600; margin: 0 0 0.5rem; font-size: 0.95rem;">삭제 시 다음 데이터가 모두 사라집니다:</p>
+                    <ul style="color: #dc2626; font-size: 0.9rem; margin: 0; padding-left: 1rem;">
+                        <li>캐릭터 정보 및 설정</li>
+                        <li>모든 대화 기록 ({{ character.total_conversations }}건)</li>
+                        <li>캐릭터 이미지</li>
+                        <li>평점 및 리뷰</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 확인 버튼들 -->
+        <div style="display: flex; gap: 1rem;">
+            <a href="{% url 'characters:my_characters' %}" 
+               style="flex: 1; padding: 0.75rem 1.5rem; background: #f3f4f6; color: #374151; text-decoration: none; border-radius: 0.5rem; font-weight: 600; text-align: center; transition: all 0.3s;"
+               onmouseover="this.style.backgroundColor='#e5e7eb';"
+               onmouseout="this.style.backgroundColor='#f3f4f6';">
+                취소
+            </a>
+            
+            <form method="post" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" 
+                        style="width: 100%; padding: 0.75rem 1.5rem; background: #ef4444; color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s;"
+                        onmouseover="this.style.backgroundColor='#dc2626'; this.style.transform='translateY(-1px)';"
+                        onmouseout="this.style.backgroundColor='#ef4444'; this.style.transform='translateY(0px)';">
+                    삭제하기
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
