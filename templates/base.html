@@ -6,6 +6,20 @@
   <title>{% block title %}Hungry Jackie{% endblock %}</title>
   {% load static %}
   <style>
+    /* CSS 변수 정의 - 전역 일관성 보장 */
+    :root {
+      --navbar-bg: #ffffff;
+      --navbar-border: #e5e7eb;
+      --navbar-text: #111827;
+      --navbar-text-muted: #6b7280;
+      --navbar-text-active: #374151;
+      --navbar-hover-bg: #f3f4f6;
+      --navbar-primary: #6366f1;
+      --navbar-primary-hover: #4f46e5;
+      --navbar-danger: #ef4444;
+      --navbar-danger-hover: #dc2626;
+      --navbar-height: 72px;
+    }
 
     /* 링크 밑줄 전역 제거 */
     a, a:visited { text-decoration: none !important; }
@@ -16,226 +30,215 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#fff;min-height:100vh;display:flex;flex-direction:column;color:#333}
 
-    /* Navbar - 고정 높이 설정 */
+    /* =================== NAVBAR 스타일 - 최우선 적용 =================== */
     .navbar{
-      background:#fff;
-      border-bottom:1px solid #e5e7eb;
-      height: 72px; /* 고정 높이 */
-      flex-shrink: 0; /* 축소되지 않도록 */
-      min-height: 72px; /* 최소 높이 보장 */
+      background: var(--navbar-bg) !important;
+      border-bottom: 1px solid var(--navbar-border) !important;
+      height: var(--navbar-height) !important;
+      flex-shrink: 0 !important;
+      min-height: var(--navbar-height) !important;
+      max-height: var(--navbar-height) !important;
+      position: relative !important;
+      z-index: 1000 !important;
     }
+    
     .nav-row{
-      max-width:1200px;
-      margin:0 auto;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:12px 24px;
-      height: 100%; /* navbar 전체 높이 사용 */
-      min-height: 48px; /* 내부 컨텐츠 최소 높이 */
+      max-width: 1200px !important;
+      margin: 0 auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 12px !important;
+      padding: 12px 24px !important;
+      height: 100% !important;
+      min-height: 48px !important;
+      box-sizing: border-box !important;
     }
+    
     .brand{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      text-decoration:none;
-      color:#111827;
-      font-weight:700;
-      font-size:1.25rem;
-      height: 48px; /* 고정 높이 */
-      flex-shrink: 0;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      text-decoration: none !important;
+      color: var(--navbar-text) !important;
+      font-weight: 700 !important;
+      font-size: 1.25rem !important;
+      height: 48px !important;
+      flex-shrink: 0 !important;
     }
-    .brand:hover{color:#6366f1}
-    .brand img{width:45px;height:45px;flex-shrink:0}
+    .brand:hover{color: var(--navbar-primary) !important;}
+    .brand img{width: 45px !important; height: 45px !important; flex-shrink: 0 !important;}
 
-    /* Buttons / Links - 고정 크기 설정 */
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:.75rem 1.25rem;
-      border-radius:.5rem;
-      transition:all .25s ease;
-      text-decoration:none;
-      border:none;
-      cursor:pointer;
-      font:500 .95rem/1 inherit;
-      min-height: 40px; /* 최소 높이 고정 */
-      white-space: nowrap; /* 텍스트 줄바꿈 방지 */
-      min-width: 80px; /* 최소 너비 설정 */
-      box-sizing: border-box;
+    /* Buttons / Links - navbar 전용 스타일 */
+    .navbar .btn{
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: .75rem 1.25rem !important;
+      border-radius: .5rem !important;
+      transition: all .25s ease !important;
+      text-decoration: none !important;
+      border: none !important;
+      cursor: pointer !important;
+      font: 500 .95rem/1 inherit !important;
+      min-height: 40px !important;
+      white-space: nowrap !important;
+      min-width: 80px !important;
+      box-sizing: border-box !important;
     }
-    .btn.primary{background:#6366f1;color:#fff}
-    .btn.primary:hover{background:#4f46e5;transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,.3)}
-    .btn.danger{background:#ef4444;color:#fff}
-    .btn.danger:hover{background:#dc2626;transform:translateY(-1px);box-shadow:0 4px 12px rgba(239,68,68,.3)}
-    .link{
-      color:#6b7280;
-      padding:.75rem 1rem;
-      border-radius:.5rem;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height: 40px;
-      white-space: nowrap;
-      text-decoration:none;
-      transition:all .25s ease;
-      box-sizing: border-box;
+    .navbar .btn.primary{
+      background: var(--navbar-primary) !important;
+      color: #fff !important;
     }
-    .link:hover{background:#f3f4f6;color:#374151}
-    .active{background:#f3f4f6;color:#374151!important;font-weight:700}
-
-    /* Profile chip - 고정 크기 설정 */
-    .profile{
-      display:flex;
-      align-items:center;
-      gap:.5rem;
-      text-decoration:none;
-      color:inherit;
-      padding:.75rem 1rem;
-      border-radius:.5rem;
-      min-height: 40px;
-      white-space: nowrap;
-      transition:all .25s ease;
-      box-sizing: border-box;
+    .navbar .btn.primary:hover{
+      background: var(--navbar-primary-hover) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(99,102,241,.3) !important;
+      color: #fff !important;
     }
-    .profile:hover{background:#f3f4f6}
-    .avatar{
-      width:32px;
-      height:32px;
-      border-radius:50%;
-      overflow:hidden;
-      border:2px solid #e5e7eb;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:#f3f4f6;
-      flex-shrink: 0;
+    .navbar .btn.danger{
+      background: var(--navbar-danger) !important;
+      color: #fff !important;
     }
-    .avatar img{width:32px;height:32px;object-fit:cover;border-radius:50%}
-
-    /* Desktop menu (default) - 정렬 개선 */
-    .menu{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      height: 48px; /* 고정 높이 */
+    .navbar .btn.danger:hover{
+      background: var(--navbar-danger-hover) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(239,68,68,.3) !important;
+      color: #fff !important;
     }
-    .menu-divider{display:none}
-
-    /* Hamburger button (mobile only) - 고정 크기 */
-    .hamburger{
-      display:none;
-      width:48px;
-      height:48px;
-      border:1px solid #e5e7eb;
-      border-radius:.5rem;
-      background:#fff;
-      align-items:center;
-      justify-content:center;
-      flex-shrink: 0;
-      transition:all .25s ease;
+    
+    .navbar .link{
+      color: var(--navbar-text-muted) !important;
+      padding: .75rem 1rem !important;
+      border-radius: .5rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      min-height: 40px !important;
+      white-space: nowrap !important;
+      text-decoration: none !important;
+      transition: all .25s ease !important;
+      box-sizing: border-box !important;
     }
-    .hamburger svg{width:22px;height:22px}
-    .hamburger[aria-expanded="true"]{background:#f3f4f6}
-
-    /* Form 버튼 크기 일관성 */
-    .menu form {
-      display: inline-block;
-      margin: 0;
+    .navbar .link:hover{
+      background: var(--navbar-hover-bg) !important;
+      color: var(--navbar-text-active) !important;
     }
-    .menu form .btn {
-      margin: 0;
+    .navbar .active{
+      background: var(--navbar-hover-bg) !important;
+      color: var(--navbar-text-active) !important;
+      font-weight: 700 !important;
     }
 
-    /* Container 설정 */
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+    /* Profile chip - navbar 전용 */
+    .navbar .profile{
+      display: flex !important;
+      align-items: center !important;
+      gap: .5rem !important;
+      text-decoration: none !important;
+      color: inherit !important;
+      padding: .75rem 1rem !important;
+      border-radius: .5rem !important;
+      min-height: 40px !important;
+      white-space: nowrap !important;
+      transition: all .25s ease !important;
+      box-sizing: border-box !important;
+    }
+    .navbar .profile:hover{background: var(--navbar-hover-bg) !important;}
+    .navbar .avatar{
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 50% !important;
+      overflow: hidden !important;
+      border: 2px solid var(--navbar-border) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: var(--navbar-hover-bg) !important;
+      flex-shrink: 0 !important;
+    }
+    .navbar .avatar img{width: 32px !important; height: 32px !important; object-fit: cover !important; border-radius: 50% !important;}
+
+    /* Desktop menu - navbar 전용 */
+    .navbar .menu{
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      height: 48px !important;
+    }
+    .navbar .menu-divider{display: none !important;}
+
+    /* Hamburger button - navbar 전용 */
+    .navbar .hamburger{
+      display: none !important;
+      width: 48px !important;
+      height: 48px !important;
+      border: 1px solid var(--navbar-border) !important;
+      border-radius: .5rem !important;
+      background: var(--navbar-bg) !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-shrink: 0 !important;
+      transition: all .25s ease !important;
+    }
+    .navbar .hamburger svg{width: 22px !important; height: 22px !important;}
+    .navbar .hamburger[aria-expanded="true"]{background: var(--navbar-hover-bg) !important;}
+
+    /* Form 버튼 크기 일관성 - navbar 전용 */
+    .navbar .menu form {
+      display: inline-block !important;
+      margin: 0 !important;
+    }
+    .navbar .menu form .btn {
+      margin: 0 !important;
     }
 
-    /* 일반 페이지용 컨테이너 */
-    .container{
-      flex:1;
-      max-width:1200px;
-      margin:2rem auto;
-      padding:0 1rem;
-      width:100%;
-    }
-
-    /* 채팅 페이지용 컨테이너 */
-    .chat-page {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: calc(100vh - 72px); /* navbar 높이 제외 */
-      margin: 0;
-      padding: 0;
-      max-width: none;
-      width: 100%;
-    }
-
-    /* Messages */
-    .messages{margin-bottom:1rem}
-    .alert{padding:1rem 1.2rem;border-radius:.75rem;margin-bottom:1rem;font-weight:500;border-left:4px solid}
-    .alert-success{background:#f0fdf4;color:#166534;border-color:#22c55e}
-    .alert-info{background:#eff6ff;color:#1e40af;border-color:#3b82f6}
-    .alert-warning{background:#fffbeb;color:#92400e;border-color:#f59e0b}
-    .alert-error{background:#fef2f2;color:#991b1b;border-color:#ef4444}
-
-    /* Home card */
-    .welcome-card{background:#fff;border:1px solid #f3f4f6;border-radius:1rem;padding:3rem;box-shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);text-align:center}
-    .welcome-card h1{color:#111827;font-size:2.5rem;margin-bottom:1rem;font-weight:700}
-    .welcome-card p{color:#6b7280;font-size:1.1rem;line-height:1.6}
-
-    /* Mobile (<=900px): use hamburger - 완전 크기 일관성 개선 */
+    /* Mobile navbar 스타일 */
     @media (max-width:900px){
-      .nav-row{
-        align-items:center !important;
-        height: 72px !important;
-        min-height: 72px !important;
-        max-height: 72px !important;
+      .navbar .nav-row{
+        align-items: center !important;
+        height: var(--navbar-height) !important;
+        min-height: var(--navbar-height) !important;
+        max-height: var(--navbar-height) !important;
       }
-      .hamburger{display:flex !important}
-      .menu{ /* start hidden under navbar */
-        position:absolute !important; 
-        left:0 !important; 
-        right:0 !important; 
-        top:72px !important; /* navbar 높이에 맞춤 */
-        background:#fff !important; 
-        border-bottom:1px solid #e5e7eb !important;
-        display:none !important; 
-        flex-direction:column !important; 
-        gap:8px !important; 
-        padding:1rem !important;
-        z-index: 1000 !important; /* 다른 요소 위에 표시 */
+      .navbar .hamburger{display: flex !important;}
+      .navbar .menu{
+        position: absolute !important; 
+        left: 0 !important; 
+        right: 0 !important; 
+        top: var(--navbar-height) !important;
+        background: var(--navbar-bg) !important; 
+        border-bottom: 1px solid var(--navbar-border) !important;
+        display: none !important; 
+        flex-direction: column !important; 
+        gap: 8px !important; 
+        padding: 1rem !important;
+        z-index: 1000 !important;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
         width: 100% !important;
         box-sizing: border-box !important;
       }
-      .menu.open{display:flex !important}
-      .menu .link,
-      .menu .profile,
-      .menu form .btn{
-        width:100% !important;
-        text-align:center !important;
-        justify-content:center !important;
-        height: 44px !important; /* 모바일에서 터치하기 쉬운 크기 */
+      .navbar .menu.open{display: flex !important;}
+      .navbar .menu .link,
+      .navbar .menu .profile,
+      .navbar .menu form .btn{
+        width: 100% !important;
+        text-align: center !important;
+        justify-content: center !important;
+        height: 44px !important;
         min-height: 44px !important;
         max-height: 44px !important;
         margin-bottom: 4px !important;
         box-sizing: border-box !important;
       }
-      .menu form{
+      .navbar .menu form{
         width: 100% !important;
         margin: 0 !important;
       }
-      .menu-divider{
-        display:block !important;
-        margin:.75rem 0 !important;
-        border-top:1px dashed #e5e7eb !important;
+      .navbar .menu-divider{
+        display: block !important;
+        margin: .75rem 0 !important;
+        border-top: 1px dashed var(--navbar-border) !important;
         width: 100% !important;
         height: 1px !important;
         border-bottom: none !important;
@@ -243,6 +246,83 @@
         border-right: none !important;
       }
     }
+    /* =================== NAVBAR 스타일 끝 =================== */
+
+    /* 일반 페이지용 컴포넌트들 (navbar에 영향받지 않도록) */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container{
+      flex: 1;
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      width: 100%;
+    }
+
+    .chat-page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - var(--navbar-height));
+      margin: 0;
+      padding: 0;
+      max-width: none;
+      width: 100%;
+    }
+
+    /* 일반 버튼들 (navbar 밖에서 사용) */
+    .btn{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: .75rem 1.25rem;
+      border-radius: .5rem;
+      transition: all .25s ease;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      font: 500 .95rem/1 inherit;
+      min-height: 40px;
+      white-space: nowrap;
+      min-width: 80px;
+      box-sizing: border-box;
+    }
+    .btn.primary{background: #6366f1; color: #fff;}
+    .btn.primary:hover{background: #4f46e5; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,.3);}
+    .btn.danger{background: #ef4444; color: #fff;}
+    .btn.danger:hover{background: #dc2626; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,.3);}
+
+    .link{
+      color: #6b7280;
+      padding: .75rem 1rem;
+      border-radius: .5rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      white-space: nowrap;
+      text-decoration: none;
+      transition: all .25s ease;
+      box-sizing: border-box;
+    }
+    .link:hover{background: #f3f4f6; color: #374151;}
+
+    /* Messages */
+    .messages{margin-bottom: 1rem;}
+    .alert{padding: 1rem 1.2rem; border-radius: .75rem; margin-bottom: 1rem; font-weight: 500; border-left: 4px solid;}
+    .alert-success{background: #f0fdf4; color: #166534; border-color: #22c55e;}
+    .alert-info{background: #eff6ff; color: #1e40af; border-color: #3b82f6;}
+    .alert-warning{background: #fffbeb; color: #92400e; border-color: #f59e0b;}
+    .alert-error{background: #fef2f2; color: #991b1b; border-color: #ef4444;}
+
+    /* Home card */
+    .welcome-card{background: #fff; border: 1px solid #f3f4f6; border-radius: 1rem; padding: 3rem; box-shadow: 0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06); text-align: center;}
+    .welcome-card h1{color: #111827; font-size: 2.5rem; margin-bottom: 1rem; font-weight: 700;}
+    .welcome-card p{color: #6b7280; font-size: 1.1rem; line-height: 1.6;}
   </style>
   {% block extra_head %}{% endblock %}
 </head>
@@ -328,17 +408,15 @@
       const menu = document.getElementById('navMenu');
       if(!hb || !menu) return;
 
-      // 초기 상태: 데스크톱에서는 항상 보이도록, 모바일에서는 닫힘
+      // 초기 상태: 데스크톱에서는 항상 보이도록, 모바일에서는 닫힌 상태
       function syncByWidth(){
         if(window.innerWidth > 900){
-          menu.classList.remove('open'); // 데스크톱에서는 open 클래스 필요 없음(기본 flex)
-          // 데스크톱 레이아웃에서는 .menu가 기본적으로 flex로 보임
+          menu.classList.remove('open');
           menu.style.display = 'flex';
           hb.setAttribute('aria-expanded','false');
         }else{
-          // 모바일 기본: 닫힌 상태
           menu.classList.remove('open');
-          menu.style.display = ''; // CSS에서 제어(display:none)
+          menu.style.display = '';
           hb.setAttribute('aria-expanded','false');
         }
       }
