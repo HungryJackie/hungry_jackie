@@ -16,258 +16,253 @@
   {% endif %}
 
   <style>
-    /* 네비게이션 바에 영향을 주지 않도록 .character-create-page로 스코핑 */
-    .character-create-page {
+    :root{
       --bg:#ffffff; --panel:#fff; --muted:#6b7280; --title:#111827;
       --line:#e5e7eb; --soft:#f3f4f6; --brand:#6366f1; --brand-2:#8b5cf6;
       --ok:#10b981; --warn:#f59e0b; --chip:#eef2ff;
     }
-    .character-create-page .page{max-width:1100px;margin:0 auto}
-    .character-create-page .topbar{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;color:#6b7280}
-    .character-create-page .h1{font-size:2rem;font-weight:800;color:var(--title);margin:0 0 .75rem}
+    .page{max-width:1100px;margin:0 auto}
+    .topbar{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;color:#6b7280}
+    .h1{font-size:2rem;font-weight:800;color:var(--title);margin:0 0 .75rem}
 
     /* 단계 탭 */
-    .character-create-page .steps{display:flex;gap:.75rem;margin:1rem 0 1.25rem}
-    .character-create-page .step{flex:1;display:flex;align-items:center;gap:.5rem;background:#fff;border:1px solid var(--line);padding:.8rem 1rem;border-radius:12px;color:#374151}
-    .character-create-page .step .n{width:28px;height:28px;border-radius:9999px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:800;color:#555}
-    .character-create-page .step.active{border-color:var(--brand); box-shadow:0 4px 14px rgba(249,115,22,.1)}
-    .character-create-page .step.active .n{background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff}
-    .character-create-page .step small{color:var(--muted)}
+    .steps{display:flex;gap:.75rem;margin:1rem 0 1.25rem}
+    .step{flex:1;display:flex;align-items:center;gap:.5rem;background:#fff;border:1px solid var(--line);padding:.8rem 1rem;border-radius:12px;color:#374151}
+    .step .n{width:28px;height:28px;border-radius:9999px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:800;color:#555}
+    .step.active{border-color:var(--brand); box-shadow:0 4px 14px rgba(99,102,241,.1)}
+    .step.active .n{background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff}
+    .step small{color:var(--muted)}
 
     /* 2열 레이아웃 */
-    .character-create-page .grid{display:grid;grid-template-columns:1fr 360px;gap:1.25rem}
-    .character-create-page .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.25rem}
-    .character-create-page .card h3{margin:.25rem 0 1rem;font-size:1rem;color:#111827}
-    .character-create-page .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-    .character-create-page .field{margin-bottom:1rem}
-    .character-create-page .label{display:block;margin-bottom:.5rem;font-weight:700;color:#374151}
-    .character-create-page .input,.character-create-page .select,.character-create-page .textarea{
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:1.25rem}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.25rem}
+    .card h3{margin:.25rem 0 1rem;font-size:1rem;color:#111827}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .field{margin-bottom:1rem}
+    .label{display:block;margin-bottom:.5rem;font-weight:700;color:#374151}
+    .input,.select,.textarea{
       width:100%;border:1px solid var(--line);border-radius:.75rem;background:#fff;
       padding:.8rem .95rem;font:inherit;color:#111827;outline:none;
     }
-    .character-create-page .textarea{min-height:120px;resize:vertical}
-    .character-create-page .help{font-size:.85rem;color:var(--muted);margin-top:.4rem}
-    .character-create-page .errorlist{margin:.4rem 0 0;padding:0;list-style:none;color:#dc2626;font-size:.9rem}
+    .textarea{min-height:120px;resize:vertical}
+    .help{font-size:.85rem;color:var(--muted);margin-top:.4rem}
+    .errorlist{margin:.4rem 0 0;padding:0;list-style:none;color:#dc2626;font-size:.9rem}
 
     /* 업로드 박스 */
-    .character-create-page .drop{
+    .drop{
       display:flex; flex-wrap:wrap; gap:1rem; align-items:center;
       border:1.5px dashed var(--line); border-radius:1rem;
       padding:1rem; background:#fafafa; min-height:140px;
     }
-    .character-create-page .avatar-xl{
+    .avatar-xl{
       width:120px; height:120px; border-radius:16px;
       overflow:hidden; background:#f3f4f6; border:1px solid var(--line);
       display:flex; align-items:center; justify-content:center; flex:0 0 auto;
     }
-    .character-create-page .avatar-xl img{ width:100%; height:100%; object-fit:cover; display:block }
+    .avatar-xl img{ width:100%; height:100%; object-fit:cover; display:block }
 
-    .character-create-page .file-ui{ display:flex; flex-direction:column; gap:.5rem; min-width:240px; }
-    .character-create-page .file-row{ display:flex; gap:.5rem; align-items:center; flex-wrap:wrap }
-    .character-create-page .input-file{ display:none }
-    .character-create-page .btn-file{
+    .file-ui{ display:flex; flex-direction:column; gap:.5rem; min-width:240px; }
+    .file-row{ display:flex; gap:.5rem; align-items:center; flex-wrap:wrap }
+    .input-file{ display:none }
+    .btn-file{
       appearance:none; border:1px solid var(--line); background:#fff;
       padding:.6rem .9rem; border-radius:.7rem; cursor:pointer; font-weight:700;
     }
-    .character-create-page .filename{ color:#6b7280; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .filename{ color:#6b7280; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 
     /* 프리뷰 카드(우측) */
-    .character-create-page .pv-head{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
-    .character-create-page .avatar{
+    .pv-head{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+    .avatar{
       width:56px;height:56px;border-radius:12px;overflow:hidden;
       border:1px solid var(--line);background:#ffffff;display:flex;
       align-items:center;justify-content:center;padding:4px; /* 가장자리 여유 */
     }
     /* 이미지가 잘리지 않도록 contain */
-    .character-create-page .avatar img{width:100%;height:100%;object-fit:contain;display:block;background:#ffffff}
-    .character-create-page .pv-name{font-weight:800}
+    .avatar img{width:100%;height:100%;object-fit:contain;display:block;background:#ffffff}
+    .pv-name{font-weight:800}
 
-    .character-create-page .bubble{background:var(--soft);border:1px solid var(--line);padding:.75rem 1rem;border-radius:14px;display:inline-block;margin:.35rem 0}
-    .character-create-page .muted{color:var(--muted);font-size:.9rem}
+    .bubble{background:var(--soft);border:1px solid var(--line);padding:.75rem 1rem;border-radius:14px;display:inline-block;margin:.35rem 0}
+    .muted{color:var(--muted);font-size:.9rem}
 
-    .character-create-page .actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:.25rem}
-    .character-create-page .btn{border:1px solid var(--line);background:#fff;padding:.8rem 1.1rem;border-radius:.8rem;cursor:pointer;font-weight:700}
-    .character-create-page .btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff; border:none}
-    .character-create-page .btn-ghost{background:#fff}
-    .character-create-page .btn-block{width:100%}
+    .actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:.25rem}
+    .btn{border:1px solid var(--line);background:#fff;padding:.8rem 1.1rem;border-radius:.8rem;cursor:pointer;font-weight:700}
+    .btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff; border:none}
+    .btn-ghost{background:#fff}
+    .btn-block{width:100%}
 
     /* 토글 세그먼트 */
-    .character-create-page .seg{display:inline-flex;border:1px solid var(--line);border-radius:9999px;overflow:hidden}
-    .character-create-page .seg a{padding:.45rem .9rem;text-decoration:none;color:#374151}
-    .character-create-page .seg a.active{background:var(--chip);color:#3730a3;font-weight:800}
+    .seg{display:inline-flex;border:1px solid var(--line);border-radius:9999px;overflow:hidden}
+    .seg a{padding:.45rem .9rem;text-decoration:none;color:#374151}
+    .seg a.active{background:var(--chip);color:#3730a3;font-weight:800}
 
     /* 반응형 */
-    @media (max-width:1024px){ 
-      .character-create-page .grid{grid-template-columns:1fr} 
-    }
+    @media (max-width:1024px){ .grid{grid-template-columns:1fr} }
   </style>
 
-  <div class="character-create-page">
-    <div class="page">
-      <div class="topbar">
-        <span style="padding:.35rem .6rem;border:1px solid var(--line);border-radius:9999px;background:#fff;">
-          {% if mode == 'edit' %}✎ 캐릭터 수정{% else %}＋ 새 캐릭터{% endif %}
-        </span>
+  <div class="page">
+    <div class="topbar">
+      <span style="padding:.35rem .6rem;border:1px solid var(--line);border-radius:9999px;background:#fff;">
+        {% if mode == 'edit' %}✎ 캐릭터 수정{% else %}＋ 새 캐릭터{% endif %}
+      </span>
+    </div>
+
+    <h1 class="h1">{% if mode == 'edit' %}캐릭터 수정{% else %}캐릭터 만들기{% endif %}</h1>
+
+    <!-- 단계 표시 -->
+    <div class="steps">
+      <div class="step active"><div class="n">1</div><div><div><b>기본</b> <small>이미지·이름·장르</small></div></div></div>
+      <div class="step"><div class="n">2</div><div><div><b>성격/말투</b> <small>배경 포함</small></div></div></div>
+      <div class="step"><div class="n">3</div><div><div><b>태그·공개</b> <small>확인 후 {% if mode == 'edit' %}저장{% else %}생성{% endif %}</small></div></div></div>
+    </div>
+
+    <form id="charForm" method="post" enctype="multipart/form-data" class="grid">
+      {% csrf_token %}
+
+      <!-- 좌측: 입력 패널 -->
+      <div class="card">
+        <h3>프로필 & 설정</h3>
+
+        <!-- STEP 1 -->
+        <section id="step1">
+          <div class="field">
+            <label class="label">캐릭터 이미지</label>
+            <div class="drop">
+              <!-- 썸네일 -->
+              <div class="avatar-xl">
+                {% if mode == 'edit' and form.instance.character_image %}
+                  <img id="preview" src="{{ form.instance.character_image.url }}" alt="preview">
+                {% else %}
+                  <img id="preview" src="{% static 'images/profiles/default_2.png' %}" alt="preview">
+                {% endif %}
+              </div>
+
+              <!-- 파일 선택 -->
+              <div class="file-ui">
+                <div class="file-row">
+                  <label for="id_character_image" class="btn-file">이미지 선택</label>
+                  <span class="filename" id="filename">선택된 파일 없음</span>
+                </div>
+                <input class="input-file" type="file" name="character_image" id="id_character_image" accept="image/*">
+                <div class="help">정사각형 권장 · 최대 2MB · JPG/PNG/GIF/WebP</div>
+                {{ form.character_image.errors }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label class="label">이름</label>
+              {{ form.name }}
+              {{ form.name.errors }}
+              <div class="help">2–50자</div>
+            </div>
+
+            <div class="field">
+              <label class="label">장르</label>
+              {{ form.genre }}
+              {{ form.genre.errors }}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">한 줄 소개</label>
+            {{ form.description }}
+            {{ form.description.errors }}
+          </div>
+
+          <!-- 공개 범위: 공개/비공개 -->
+          <div class="field">
+            <label class="label">공개 범위</label>
+            <div class="seg" role="tablist" aria-label="visibility">
+              <a href="#" class="seg-public"  data-v="public"  onclick="setVis(event,'public')">공개</a>
+              <a href="#" class="seg-private" data-v="private" onclick="setVis(event,'private')">비공개</a>
+            </div>
+            <div style="display:none">
+              {{ form.visibility }}
+            </div>
+            {{ form.visibility.errors }}
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn btn-ghost" onclick="location.href='{% url 'characters:my_characters' %}'">내 캐릭터</button>
+            <button type="button" class="btn btn-primary" onclick="goStep(2)">다음</button>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section id="step2" style="display:none">
+          <div class="row">
+            <div class="field">
+              <label class="label">성격 설정</label>
+              {{ form.personality }}
+              {{ form.personality.errors }}
+              <div class="help">성격, 특징, 행동 패턴 등을 자세히 작성하세요.</div>
+            </div>
+            <div class="field">
+              <label class="label">말투/대화 스타일</label>
+              {{ form.speaking_style }}
+              {{ form.speaking_style.errors }}
+              <div class="help">말버릇, 1인칭/2인칭, 존댓말/반말 등</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">배경 이야기</label>
+            {{ form.background_story }}
+            {{ form.background_story.errors }}
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn" onclick="goStep(1)">이전</button>
+            <button type="button" class="btn btn-primary" onclick="goStep(3)">다음</button>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section id="step3" style="display:none">
+          <div class="field">
+            <label class="label">태그</label>
+            {{ form.tags }}
+            {{ form.tags.errors }}
+            <div class="help">쉼표( , )로 구분 — 예) 힐링, 다정</div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn" onclick="goStep(2)">이전</button>
+            <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}수정 저장{% else %}저장{% endif %}</button>
+          </div>
+        </section>
       </div>
 
-      <h1 class="h1">{% if mode == 'edit' %}캐릭터 수정{% else %}캐릭터 만들기{% endif %}</h1>
-
-      <!-- 단계 표시 -->
-      <div class="steps">
-        <div class="step active"><div class="n">1</div><div><div><b>기본</b> <small>이미지·이름·장르</small></div></div></div>
-        <div class="step"><div class="n">2</div><div><div><b>성격/말투</b> <small>배경 포함</small></div></div></div>
-        <div class="step"><div class="n">3</div><div><div><b>태그·공개</b> <small>확인 후 {% if mode == 'edit' %}저장{% else %}생성{% endif %}</small></div></div></div>
-      </div>
-
-      <form id="charForm" method="post" enctype="multipart/form-data" class="grid">
-        {% csrf_token %}
-
-        <!-- 좌측: 입력 패널 -->
-        <div class="card">
-          <h3>프로필 & 설정</h3>
-
-          <!-- STEP 1 -->
-          <section id="step1">
-            <div class="field">
-              <label class="label">캐릭터 이미지</label>
-              <div class="drop">
-                <!-- 썸네일 -->
-                <div class="avatar-xl">
-                  {% if mode == 'edit' and form.instance.character_image %}
-                    <img id="preview" src="{{ form.instance.character_image.url }}" alt="preview">
-                  {% else %}
-                    <img id="preview" src="{% static 'images/profiles/default_2.png' %}" alt="preview">
-                  {% endif %}
-                </div>
-
-                <!-- 파일 선택 -->
-                <div class="file-ui">
-                  <div class="file-row">
-                    <label for="id_character_image" class="btn-file">이미지 선택</label>
-                    <span class="filename" id="filename">선택된 파일 없음</span>
-                  </div>
-                  <input class="input-file" type="file" name="character_image" id="id_character_image" accept="image/*">
-                  <div class="help">정사각형 권장 · 최대 2MB · JPG/PNG/GIF/WebP</div>
-                  {{ form.character_image.errors }}
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="field">
-                <label class="label">이름</label>
-                {{ form.name }}
-                {{ form.name.errors }}
-                <div class="help">2–50자</div>
-              </div>
-
-              <div class="field">
-                <label class="label">장르</label>
-                {{ form.genre }}
-                {{ form.genre.errors }}
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="label">한 줄 소개</label>
-              {{ form.description }}
-              {{ form.description.errors }}
-            </div>
-
-            <!-- 공개 범위: 공개/비공개 -->
-            <div class="field">
-              <label class="label">공개 범위</label>
-              <div class="seg" role="tablist" aria-label="visibility">
-                <a href="#" class="seg-public"  data-v="public"  onclick="setVis(event,'public')">공개</a>
-                <a href="#" class="seg-private" data-v="private" onclick="setVis(event,'private')">비공개</a>
-              </div>
-              <div style="display:none">
-                {{ form.visibility }}
-              </div>
-              {{ form.visibility.errors }}
-            </div>
-
-            <div class="actions">
-              <button type="button" class="btn btn-ghost" onclick="location.href='{% url 'characters:my_characters' %}'">내 캐릭터</button>
-              <button type="button" class="btn btn-primary" onclick="goStep(2)">다음</button>
-            </div>
-          </section>
-
-          <!-- STEP 2 -->
-          <section id="step2" style="display:none">
-            <div class="row">
-              <div class="field">
-                <label class="label">성격 설정</label>
-                {{ form.personality }}
-                {{ form.personality.errors }}
-                <div class="help">성격, 특징, 행동 패턴 등을 자세히 작성하세요.</div>
-              </div>
-              <div class="field">
-                <label class="label">말투/대화 스타일</label>
-                {{ form.speaking_style }}
-                {{ form.speaking_style.errors }}
-                <div class="help">말버릇, 1인칭/2인칭, 존댓말/반말 등</div>
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="label">배경 이야기</label>
-              {{ form.background_story }}
-              {{ form.background_story.errors }}
-            </div>
-
-            <div class="actions">
-              <button type="button" class="btn" onclick="goStep(1)">이전</button>
-              <button type="button" class="btn btn-primary" onclick="goStep(3)">다음</button>
-            </div>
-          </section>
-
-          <!-- STEP 3 -->
-          <section id="step3" style="display:none">
-            <div class="field">
-              <label class="label">태그</label>
-              {{ form.tags }}
-              {{ form.tags.errors }}
-              <div class="help">쉼표( , )로 구분 — 예) 힐링, 다정</div>
-            </div>
-
-            <div class="actions">
-              <button type="button" class="btn" onclick="goStep(2)">이전</button>
-              <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}수정 저장{% else %}저장{% endif %}</button>
-            </div>
-          </section>
+      <!-- 우측: 채팅 미리보기 (한 줄 소개 제거 + 이미지 contain) -->
+      <aside class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
+          <h3>채팅 미리보기</h3>
+          <span class="seg"><a class="active">내 캐릭터</a><a>저장</a></span>
         </div>
 
-        <!-- 우측: 채팅 미리보기 (한 줄 소개 제거 + 이미지 contain) -->
-        <aside class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
-            <h3>채팅 미리보기</h3>
-            <span class="seg"><a class="active">내 캐릭터</a><a>저장</a></span>
+        <div class="pv-head">
+          <div class="avatar">
+            {% if mode == 'edit' and form.instance.character_image %}
+              <img id="pv-avatar" src="{{ form.instance.character_image.url }}" alt="">
+            {% else %}
+              <img id="pv-avatar" src="{% static 'images/profiles/default_2.png' %}" alt="">
+            {% endif %}
           </div>
-
-          <div class="pv-head">
-            <div class="avatar">
-              {% if mode == 'edit' and form.instance.character_image %}
-                <img id="pv-avatar" src="{{ form.instance.character_image.url }}" alt="">
-              {% else %}
-                <img id="pv-avatar" src="{% static 'images/profiles/default_2.png' %}" alt="">
-              {% endif %}
-            </div>
-            <div>
-              <div class="pv-name" id="pv-name">{{ form.instance.name|default:"이름 미정" }}</div>
-              {# 한 줄 소개는 프리뷰에서 제거했습니다 #}
-            </div>
+          <div>
+            <div class="pv-name" id="pv-name">{{ form.instance.name|default:"이름 미정" }}</div>
+            {# 한 줄 소개는 프리뷰에서 제거했습니다 #}
           </div>
+        </div>
 
-          <div class="bubble" id="pv-b1">안녕! 오늘은 좀 지친 하루였어</div>
-          <div class="bubble muted" id="pv-b2">
-            {% if form.instance.speaking_style %}대화 톤 예: {{ form.instance.speaking_style }}{% else %}말투/스타일을 적으면 여기에 톤이 반영돼요.{% endif %}
-          </div>
+        <div class="bubble" id="pv-b1">안녕! 오늘은 좀 지친 하루였어</div>
+        <div class="bubble muted" id="pv-b2">
+          {% if form.instance.speaking_style %}대화 톤 예: {{ form.instance.speaking_style }}{% else %}말투/스타일을 적으면 여기에 톤이 반영돼요.{% endif %}
+        </div>
 
-          <div class="help" style="margin-top:.5rem;">※ 실서비스 품질은 입력한 캐릭터 설정의 구체성에 비례합니다.</div>
-        </aside>
-      </form>
-    </div>
+        <div class="help" style="margin-top:.5rem;">※ 실서비스 품질은 입력한 캐릭터 설정의 구체성에 비례합니다.</div>
+      </aside>
+    </form>
   </div>
 
   <script>
