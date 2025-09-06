@@ -64,17 +64,19 @@ def character_edit(request, character_id):
 
 @login_required
 def character_delete(request, character_id):
-    """캐릭터 삭제"""
+    """캐릭터 삭제 확인 및 처리"""
     character = get_object_or_404(Character, id=character_id, creator=request.user)
+    
     if request.method == 'POST':
+        character_name = character.name
         character.delete()
-        messages.success(request, '캐릭터가 삭제되었습니다.')
+        messages.success(request, f'캐릭터 "{character_name}"이(가) 삭제되었습니다.')
         return redirect('characters:my_characters')
-
-    # 간단한 확인 화면이 없다면 바로 삭제 UI 없이 리스트로 돌려보내도 됨
-    messages.error(request, '잘못된 접근입니다.')
-    return redirect('characters:my_characters')
-
+    
+    # GET 요청시 삭제 확인 페이지 표시
+    return render(request, 'characters/character_delete_confirm.html', {
+        'character': character,
+    })
 
 @login_required
 def my_characters(request):
