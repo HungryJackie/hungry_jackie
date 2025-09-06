@@ -5,10 +5,12 @@
 
 {% block extra_head %}
 <style>
-  /* ── Neutral Gray 팔레트(네비바와 톤 맞춤) ── */
+  /* ── 주황색 테마 팔레트 ── */
   :root{
-    --primary:#4b5563;          /* gray-600 */
-    --primary-dark:#374151;     /* gray-700 */
+    --primary:#f97316;          /* orange-500 */
+    --primary-dark:#ea580c;     /* orange-600 */
+    --primary-light:#fed7aa;    /* orange-200 */
+    --primary-bg:#fff7ed;       /* orange-50 */
     --panel:#ffffff;
     --text:#1f2937;             /* gray-800 */
     --text-light:#6b7280;       /* gray-500 */
@@ -43,7 +45,7 @@
   .char-avatar img{width:100%;height:100%;object-fit:cover}
   .char-info h2{font-size:1.1rem;font-weight:600;color:var(--text);margin:0 0 .25rem}
   .char-status{font-size:.85rem;color:var(--text-light);display:flex;align-items:center;gap:.25rem}
-  .status-dot{width:6px;height:6px;background:#22c55e;border-radius:50%}
+  .status-dot{width:6px;height:6px;background:var(--primary);border-radius:50%}
 
   /* 크레딧 배지(하트 아이콘 적용) */
   .credit-badge{
@@ -52,7 +54,7 @@
     border:1px solid var(--border);
     display:inline-flex; align-items:center; gap:.35rem;
   }
-  .credit-badge .heart{ width:26px; height:26px; fill:#ef4444; } /* red-500 */
+  .credit-badge .heart{ width:26px; height:26px; fill:var(--primary); }
 
   /* 메시지 영역 */
   .messages-container{flex:1; overflow-y:auto; padding:1rem 0; scroll-behavior:smooth}
@@ -70,7 +72,7 @@
   .message-avatar img{width:100%;height:100%;object-fit:cover}
   .user-avatar-placeholder{
     width:36px;height:36px;border-radius:50%;
-    background:#e5e7eb; color:#111827; display:flex;align-items:center;justify-content:center;
+    background:var(--primary); color:#ffffff; display:flex;align-items:center;justify-content:center;
     font-weight:700;font-size:.9rem; border:1px solid var(--border);
   }
 
@@ -82,7 +84,7 @@
   .message-sender{font-size:.8rem;color:var(--text-light);margin-bottom:.25rem;padding:0 .75rem}
   .message-bubble{
     padding:.75rem 1rem; border-radius:18px; font-size:.95rem; line-height:1.5;
-    word-wrap:break-word; position:relative; width:100%;  /* ← 가로폭 고정 */
+    word-wrap:break-word; position:relative; width:100%;
     box-sizing:border-box;
   }
   .message-group.user .message-bubble{background:var(--user-bubble);color:var(--text);border:1px solid var(--border);border-bottom-right-radius:6px}
@@ -101,7 +103,7 @@
     line-height:1.4; word-break:keep-all; writing-mode:horizontal-tb;
     -webkit-appearance:textarea; -moz-appearance:textarea; appearance:textarea;
   }
-  .message-input:focus{outline:none;border-color:#d1d5db;background:#ffffff;box-shadow:0 0 0 3px rgba(17,24,39,.08)}
+  .message-input:focus{outline:none;border-color:var(--primary-light);background:#ffffff;box-shadow:0 0 0 3px rgba(249,115,22,.08)}
   .send-button{
     background:var(--primary); color:#fff; border:1px solid var(--primary-dark);
     width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0
@@ -115,7 +117,7 @@
   .typing-bubble{
     background:var(--char-bubble); border:1px solid var(--border);
     border-radius:18px; padding:1rem; display:inline-flex; align-items:center; gap:.35rem;
-    width:100%; min-width:100%; justify-content:flex-start;  /* ← 폭 고정 */
+    width:100%; min-width:100%; justify-content:flex-start;
     box-sizing:border-box;
   }
   .typing-dot{width:6px;height:6px;background:#9aa1ab;border-radius:50%;animation:typing 1.4s infinite}
@@ -246,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const sendButton = document.getElementById('sendButton');
   const messagesContainer = document.getElementById('messagesContainer');
   const typingRow = document.getElementById('typingRow');
-  const creditCountEl = document.querySelector('.credit-badge span'); // 숫자만 업데이트
+  const creditCountEl = document.querySelector('.credit-badge span');
   let isLoading = false;
 
   const characterName = '{{ conversation.character.name|escapejs }}';
@@ -320,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if(data.success){
         addMessage('character', data.ai_response || '', characterName, characterAvatar);
         if (typeof data.remaining_credits !== 'undefined' && creditCountEl){
-          creditCountEl.textContent = data.remaining_credits; // 숫자만 교체
+          creditCountEl.textContent = data.remaining_credits;
         }
       }else{
         addMessage('character', data.error || '죄송합니다. 오류가 발생했습니다.', characterName, characterAvatar);
