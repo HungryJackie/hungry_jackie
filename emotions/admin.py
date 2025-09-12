@@ -1,6 +1,6 @@
 # emotions/admin.py
 from django.contrib import admin
-from .models import Emotion, Genre, EmotionGenreRecommendation, UserEmotionEntry, Work
+from .models import Emotion, Genre, EmotionGenreRecommendation, UserEmotionEntry, Work, EmotionKeyword
 
 
 @admin.register(Emotion)
@@ -17,6 +17,24 @@ class GenreAdmin(admin.ModelAdmin):
     list_display = ['name', 'category', 'description']
     list_filter = ['category']
     search_fields = ['name', 'description']
+
+
+@admin.register(EmotionKeyword)
+class EmotionKeywordAdmin(admin.ModelAdmin):
+    list_display = ['emotion', 'keyword', 'weight', 'description']
+    list_filter = ['emotion', 'weight']
+    search_fields = ['keyword', 'description']
+    ordering = ['emotion', '-weight', 'keyword']
+    
+    fieldsets = (
+        ('기본 정보', {
+            'fields': ('emotion', 'keyword', 'weight')
+        }),
+        ('상세 정보', {
+            'fields': ('description',),
+            'classes': ('wide',)
+        })
+    )
 
 
 class EmotionGenreRecommendationInline(admin.TabularInline):
