@@ -4,15 +4,145 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F, Case, When, FloatField
 import json
 
 from .models import Character, Conversation, Message, UserCredit
 from .forms import CharacterCreateForm
 from .services import gemini_service
-from emotions.models import Emotion, Genre
+from emotions.models import Emotion, Genre, EmotionKeyword
 
-
+def generate_character_guide(emotion, genre):
+    """감정-장르 조합에 따른 캐릭터 생성 가이드"""
+    
+    # 감정별 키워드 가져오기
+    emotion_keywords = list(EmotionKeyword.objects.filter(
+        emotion=emotion
+    ).order_by('-weight')[:8])
+    
+    # 감정-장르 조합별 가이드 데이터
+    guide_templates = {
+        # 우울해요 조합들
+        ('우울해요', '치유물'): {
+            'personality_suggestions': [
+                '따뜻하고 공감 능력이 뛰어난 성격',
+                '상처받은 마음을 이해하고 위로해주는 캐릭터',
+                '희망을 잃지 않고 긍정적 에너지를 전달하는 성격',
+                '인내심이 많고 끝까지 함께해주는 든든한 캐릭터'
+            ],
+            'speaking_style_suggestions': [
+                '부드럽고 따뜻한 말투, "괜찮아요", "천천히 해도 돼요"',
+                '공감하는 표현을 자주 사용, "충분히 이해해요", "당신의 마음 알겠어요"',
+                '격려와 위로의 말을 자연스럽게 건네는 말투',
+                '존댓말 사용으로 상대방을 존중하는 느낌'
+            ],
+            'background_suggestions': [
+                '상담사나 심리치료사 배경으로 전문성 부여',
+                '과거 본인도 어려움을 겪었지만 극복한 경험',
+                '도서관이나 카페 등 평온한 공간에서 활동',
+                '동물 보호소나 자원봉사 활동으로 따뜻한 마음 표현'
+            ]
+        },
+        
+        ('짜증나요', '사이다물'): {
+            'personality_suggestions': [
+                '정의감이 강하고 불의를 참지 못하는 성격',
+                '명확하고 논리적인 사고를 가진 캐릭터',
+                '시원시원하고 직설적인 성격',
+                '문제 해결 능력이 뛰어난 액션형 캐릭터'
+            ],
+            'speaking_style_suggestions': [
+                '단호하고 확신에 찬 말투, "그건 잘못된 거예요!"',
+                '논리적인 설명과 명확한 근거 제시',
+                '때로는 날카롭지만 항상 정당한 이유가 있는 말투',
+                '반말과 존댓말을 상황에 맞게 적절히 사용'
+            ],
+            'background_suggestions': [
+                '변호사, 기자, 또는 정의를 추구하는 직업',
+                '부당한 일을 당한 경험이 있어 더욱 정의감이 강함',
+                '법정이나 언론사 등 진실을 다루는 환경',
+                '사회 불의와 맞서 싸운 경험이 풍부'
+            ]
+        },
+        
+        ('외로워요', '우정물'): {
+            'personality_suggestions': [
+                '따뜻하고 사교적이며 사람을 좋아하는 성격',
+                '진실한 우정을 소중히 여기는 캐릭터',
+                '상대방의 이야기를 잘 들어주는 공감형 성격',
+                '함께 있으면 편안함을 주는 친근한 캐릭터'
+            ],
+            'speaking_style_suggestions': [
+                '친근하고 편안한 말투, "우리 함께 해요"',
+                '공감과 격려의 표현을 자주 사용',
+                '상황에 따라 반말과 존댓말을 자연스럽게 사용',
+                '유머를 적절히 섞어 분위기를 밝게 만드는 말투'
+            ],
+            'background_suggestions': [
+                '학교나 직장에서 인기 많은 분위기 메이커',
+                '동아리나 모임 활동을 즐기는 사교적 배경',
+                '카페나 공원 등 사람들이 모이는 곳을 좋아함',
+                '과거 좋은 친구들과의 추억이 많은 경험'
+            ]
+        },
+        
+        ('자신없어요', '성장물'): {
+            'personality_suggestions': [
+                '도전을 두려워하지 않는 용기 있는 성격',
+                '실패를 딛고 일어서는 강인한 정신력',
+                '남을 격려하고 응원하는 것을 좋아하는 캐릭터',
+                '꾸준한 노력과 성장을 중시하는 성격'
+            ],
+            'speaking_style_suggestions': [
+                '격려와 응원이 가득한 말투, "할 수 있어요!"',
+                '경험을 바탕으로 한 조언과 팁 제공',
+                '때로는 엄격하지만 항상 성장을 바라는 마음',
+                '자신의 실패담도 솔직하게 공유하는 말투'
+            ],
+            'background_suggestions': [
+                '운동선수나 트레이너로 도전과 성장 경험',
+                '창업가나 예술가로 끊임없는 시도와 실패 경험',
+                '멘토나 코치 역할로 다른 사람 성장 도움',
+                '어려운 환경을 극복한 성공 스토리 보유'
+            ]
+        },
+        
+        # 기타 조합들도 유사하게 추가 가능...
+    }
+    
+    # 기본 가이드 템플릿
+    default_guide = {
+        'personality_suggestions': [
+            f'{emotion.description} 감정을 이해하고 공감할 수 있는 성격',
+            f'{genre.name} 장르에 어울리는 매력적인 캐릭터',
+            '상대방의 마음을 헤아리는 따뜻한 성격',
+            '자신만의 독특한 매력을 가진 개성 있는 캐릭터'
+        ],
+        'speaking_style_suggestions': [
+            f'{genre.name} 장르에 어울리는 특색 있는 말투',
+            '자연스럽고 편안한 대화 스타일',
+            '상황에 맞는 적절한 반응과 표현',
+            '개성을 드러내는 특별한 말버릇이나 표현'
+        ],
+        'background_suggestions': [
+            f'{genre.name} 장르의 세계관에 맞는 배경 설정',
+            f'{emotion.description} 상황을 이해할 수 있는 경험',
+            '흥미로운 과거사나 특별한 경험',
+            '캐릭터의 성격을 뒷받침하는 배경 스토리'
+        ]
+    }
+    
+    # 조합 키 생성
+    combo_key = (emotion.name, genre.name)
+    guide_data = guide_templates.get(combo_key, default_guide)
+    
+    # 키워드 정보 추가
+    guide_data['keywords'] = [kw.keyword for kw in emotion_keywords]
+    guide_data['emotion_description'] = emotion.description
+    guide_data['genre_description'] = genre.description
+    
+    return guide_data
+    
 @login_required
 def character_create(request):
     """캐릭터 생성 페이지"""
@@ -300,3 +430,150 @@ def send_message(request, conversation_id):
         logger = logging.getLogger(__name__)
         logger.error(f"메시지 전송 오류: {str(e)}")
         return JsonResponse({'success': False, 'error': '메시지 전송 중 오류가 발생했습니다.'})
+
+def recommended_characters(request):
+    """감정-장르 기반 캐릭터 추천"""
+    emotion_id = request.GET.get('emotion')
+    genre_id = request.GET.get('genre')
+    sort_type = request.GET.get('sort', 'recommended')
+
+    if not emotion_id or not genre_id:
+        messages.error(request, '감정과 장르 정보가 필요합니다.')
+        return redirect('emotions:emotion_selection')
+
+    emotion = get_object_or_404(Emotion, id=emotion_id, is_active=True)
+    genre = get_object_or_404(Genre, id=genre_id)
+
+    # 해당 장르의 활성 캐릭터들
+    characters_qs = Character.objects.filter(
+        genre=genre,
+        status='active',
+        visibility='public'
+    ).select_related('creator', 'genre').annotate(
+        conversation_count=Count('conversation')
+    )
+
+    # 정렬 방식에 따른 처리
+    if sort_type == 'recommended':
+        # 추천순: 감정 키워드 매칭 + 개인화 점수
+        characters_with_scores = []
+        
+        for character in characters_qs:
+            score = calculate_recommendation_score(character, emotion, request.user)
+            characters_with_scores.append((character, score))
+        
+        # 점수순 정렬
+        characters_with_scores.sort(key=lambda x: x[1], reverse=True)
+        characters = [item[0] for item in characters_with_scores]
+        
+    elif sort_type == 'rating':
+        # 평점순
+        characters = characters_qs.order_by('-rating_count', '-rating_sum', '-created_at')
+        
+    elif sort_type == 'popular':
+        # 인기순 (대화수 기준)
+        characters = characters_qs.order_by('-total_conversations', '-created_at')
+        
+    else:
+        # 기본값
+        characters = characters_qs.order_by('-created_at')
+
+    # 페이지네이션
+    paginator = Paginator(characters, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 감정 키워드 정보 (UI에 표시용)
+    emotion_keywords = EmotionKeyword.objects.filter(
+        emotion=emotion
+    ).order_by('-weight')[:5]  # 상위 5개 키워드만
+
+    context = {
+        'emotion': emotion,
+        'genre': genre,
+        'page_obj': page_obj,
+        'sort_type': sort_type,
+        'emotion_keywords': emotion_keywords,
+        'total_count': len(characters) if sort_type == 'recommended' else characters_qs.count(),
+    }
+
+    return render(request, 'characters/recommended_characters.html', context)
+
+
+def calculate_recommendation_score(character, emotion, user):
+    """캐릭터 추천 점수 계산"""
+    score = 0.0
+    
+    # 1. 감정 키워드 매칭 점수 (40%)
+    keyword_score = calculate_keyword_match_score(character, emotion)
+    score += keyword_score * 0.4
+    
+    # 2. 사용자 선호도 점수 (30%)
+    if user.is_authenticated:
+        preference_score = calculate_user_preference_score(character, user)
+        score += preference_score * 0.3
+    
+    # 3. 평점 점수 (20%)
+    rating_score = character.average_rating / 5.0  # 0-1로 정규화
+    score += rating_score * 0.2
+    
+    # 4. 인기도 점수 (10%)
+    max_conversations = Character.objects.aggregate(
+        max_conv=Count('conversation')
+    )['max_conv'] or 1
+    popularity_score = character.total_conversations / max_conversations
+    score += popularity_score * 0.1
+    
+    return score
+
+
+def calculate_keyword_match_score(character, emotion):
+    """감정 키워드 매칭 점수 계산"""
+    keywords = EmotionKeyword.objects.filter(emotion=emotion)
+    score = 0.0
+    max_possible_score = sum(kw.weight for kw in keywords)
+    
+    if max_possible_score == 0:
+        return 0.0
+    
+    # 캐릭터의 텍스트 필드들
+    text_fields = [
+        character.description or '',
+        character.personality or '',
+        character.background_story or '',
+        character.speaking_style or '',
+        character.tags or ''
+    ]
+    
+    combined_text = ' '.join(text_fields).lower()
+    
+    for keyword in keywords:
+        if keyword.keyword in combined_text:
+            score += keyword.weight
+    
+    # 0-1 범위로 정규화
+    return score / max_possible_score
+
+
+def calculate_user_preference_score(character, user):
+    """사용자 선호도 점수 계산"""
+    # 사용자의 대화 이력 기반 점수 계산
+    user_conversations = Conversation.objects.filter(
+        user=user,
+        status='active'
+    ).select_related('character__genre')
+    
+    if not user_conversations.exists():
+        return 0.5  # 중간값
+    
+    # 같은 장르 대화 비율
+    total_conversations = user_conversations.count()
+    same_genre_conversations = user_conversations.filter(
+        character__genre=character.genre
+    ).count()
+    
+    genre_preference = same_genre_conversations / total_conversations
+    
+    # 비슷한 캐릭터와의 대화 만족도 (평가가 있다면)
+    # 현재는 간단하게 장르 선호도만 반영
+    return genre_preference

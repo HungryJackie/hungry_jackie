@@ -37,6 +37,23 @@ class Genre(models.Model):
         return self.name
 
 
+class EmotionKeyword(models.Model):
+    """감정별 키워드 매핑"""
+    emotion = models.ForeignKey(Emotion, on_delete=models.CASCADE, verbose_name="감정")
+    keyword = models.CharField(max_length=50, verbose_name="키워드")
+    weight = models.FloatField(default=1.0, verbose_name="가중치")
+    description = models.CharField(max_length=100, blank=True, verbose_name="키워드 설명")
+    
+    class Meta:
+        verbose_name = "감정 키워드"
+        verbose_name_plural = "감정 키워드들"
+        unique_together = ['emotion', 'keyword']
+        ordering = ['emotion', '-weight', 'keyword']
+    
+    def __str__(self):
+        return f"{self.emotion.name} - {self.keyword} ({self.weight})"
+
+
 class EmotionGenreRecommendation(models.Model):
     """감정-장르 추천 매핑"""
     emotion = models.ForeignKey(Emotion, on_delete=models.CASCADE, verbose_name="감정")
