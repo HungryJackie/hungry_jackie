@@ -279,6 +279,13 @@
                     <button class="btn btn-primary" onclick="selectGenre({{ recommendation.genre.id }}, '{{ recommendation.genre.name }}')">
                         이 장르 선택
                     </button>
+                    <a href="{% url 'characters:recommended_characters' %}?emotion={{ emotion.id }}&genre={{ recommendation.genre.id }}" 
+                       class="btn btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        캐릭터 보기
+                    </a>
                     <button class="btn btn-secondary" onclick="skipGenre(this)">
                         관심 없음
                     </button>

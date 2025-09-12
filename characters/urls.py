@@ -15,6 +15,9 @@ urlpatterns = [
     path('<int:character_id>/edit/', views.character_edit, name='character_edit'),
     path('<int:character_id>/delete/', views.character_delete, name='character_delete'),
 
+    # 추천 캐릭터 (새로 추가)
+    path('recommended/', views.recommended_characters, name='recommended_characters'),
+
     # 대화 관련
     path('<int:character_id>/chat/', views.start_conversation, name='start_conversation'),
     path('chat/<int:conversation_id>/', views.conversation_view, name='conversation'),
