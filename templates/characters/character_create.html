@@ -602,6 +602,16 @@
       preview.src = url;
       pvAvatar.src = url;
     });
+
+    // 장르 자동 설정 (URL 파라미터로 전달된 경우)
+    {% if genre %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const genreSelect = document.getElementById('{{ form.genre.id_for_label }}') || document.querySelector('[name="genre"]');
+        if (genreSelect) {
+            genreSelect.value = '{{ genre.id }}';
+        }
+    });
+    {% endif %}
   </script>
 </div>
 {% endblock %}

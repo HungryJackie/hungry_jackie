@@ -153,21 +153,52 @@ def character_create(request):
         messages.error(request, f'캐릭터는 최대 {max_characters}개까지 생성할 수 있습니다.')
         return redirect('characters:my_characters')
 
+    # URL 파라미터에서 감정과 장르 정보 가져오기
+    emotion_id = request.GET.get('emotion')
+    genre_id = request.GET.get('genre')
+    
+    emotion = None
+    genre = None
+    character_guide = None
+    
+    # 감정과 장르가 모두 제공된 경우 가이드 생성
+    if emotion_id and genre_id:
+        try:
+            emotion = get_object_or_404(Emotion, id=emotion_id, is_active=True)
+            genre = get_object_or_404(Genre, id=genre_id)
+            character_guide = generate_character_guide(emotion, genre)
+        except (ValueError, Emotion.DoesNotExist, Genre.DoesNotExist):
+            # 잘못된 ID인 경우 무시하고 일반 생성 모드로
+            pass
+
     if request.method == 'POST':
         form = CharacterCreateForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             character = form.save(commit=False)
             character.creator = request.user
             character.status = 'active'  # 개발 중 자동 승인
+            
+            # 장르가 URL에서 제공된 경우 자동 설정
+            if genre and not form.cleaned_data.get('genre'):
+                character.genre = genre
+                
             character.save()
             messages.success(request, '캐릭터가 성공적으로 생성되었습니다!')
             return redirect('characters:character_detail', character_id=character.id)
     else:
-        form = CharacterCreateForm(user=request.user)
+        # 장르가 제공된 경우 폼 초기값 설정
+        initial_data = {}
+        if genre:
+            initial_data['genre'] = genre
+            
+        form = CharacterCreateForm(user=request.user, initial=initial_data)
 
     return render(request, 'characters/character_create.html', {
         'form': form,
-        'mode': 'create',  # 템플릿 재사용 위한 플래그
+        'mode': 'create',
+        'emotion': emotion,
+        'genre': genre,
+        'character_guide': character_guide,
     })
 
 
@@ -188,7 +219,10 @@ def character_edit(request, character_id):
     return render(request, 'characters/character_create.html', {
         'form': form,
         'character': character,
-        'mode': 'edit',  # 템플릿 분기
+        'mode': 'edit',
+        'emotion': None,  # 편집 모드에서는 가이드 표시 안함
+        'genre': None,
+        'character_guide': None,
     })
 
 
