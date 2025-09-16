@@ -376,6 +376,70 @@
             justify-content: center;
         }
     }
+
+    .detail-section {
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .section-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .genre-list, .character-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .genre-tag {
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .character-item {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .character-name {
+        font-weight: 600;
+        color: #166534;
+        margin-bottom: 2px;
+    }
+
+    .character-meta {
+        color: #6b7280;
+        font-size: 11px;
+    }
+
+    .empty-state {
+        color: #9ca3af;
+        font-style: italic;
+        font-size: 13px;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 6px;
+        text-align: center;
+    }
 </style>
 {% endblock %}
 
@@ -472,19 +536,51 @@
         <div class="detail-body">
             <!-- 보기 모드 -->
             <div id="viewMode">
-                <div class="detail-note">
-                    <div class="note-label">메모</div>
-                    <div class="note-content" id="detailNote"></div>
+                <!-- 메모 섹션 -->
+                <div class="detail-section">
+                    <div class="section-title">
+                        <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        메모
+                    </div>
+                    <div class="detail-note">
+                        <div class="note-content" id="detailNote"></div>
+                    </div>
                 </div>
+
+                <!-- 선택한 장르 섹션 -->
+                <div class="detail-section" id="genresSection">
+                    <div class="section-title">
+                        <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                        선택한 장르
+                    </div>
+                    <div class="genre-list" id="detailGenres"></div>
+                </div>
+
+                <!-- 대화한 캐릭터 섹션 -->
+                <div class="detail-section" id="charactersSection">
+                    <div class="section-title">
+                        <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        대화한 캐릭터
+                    </div>
+                    <div class="character-list" id="detailCharacters"></div>
+                </div>
+                
                 <div class="detail-meta" id="detailTime"></div>
             </div>
             
-            <!-- 편집 모드 -->
+            <!-- 편집 모드 - 기존과 동일 -->
             <div class="edit-form" id="editMode">
                 <textarea class="edit-textarea" id="editNote" placeholder="메모를 입력하세요..."></textarea>
             </div>
         </div>
         
+        <!-- 액션 버튼들 - 기존과 동일 -->
         <div class="detail-actions">
             <button class="btn btn-secondary" onclick="closeDetailModal()">닫기</button>
             <button class="btn btn-secondary" id="editBtn" onclick="toggleEdit()">수정</button>
@@ -515,6 +611,45 @@ function showDetail(entryId) {
             
             // 편집 폼에도 데이터 설정
             document.getElementById('editNote').value = data.note || '';
+            
+            // 선택한 장르 표시
+            const genresContainer = document.getElementById('detailGenres');
+            const genresSection = document.getElementById('genresSection');
+            
+            if (data.selected_genres && data.selected_genres.length > 0) {
+                genresContainer.innerHTML = '';
+                data.selected_genres.forEach(genre => {
+                    const genreTag = document.createElement('span');
+                    genreTag.className = 'genre-tag';
+                    genreTag.textContent = genre.name;
+                    genresContainer.appendChild(genreTag);
+                });
+                genresSection.style.display = 'block';
+            } else {
+                genresContainer.innerHTML = '<div class="empty-state">선택한 장르가 없습니다</div>';
+                genresSection.style.display = 'block';
+            }
+            
+            // 대화한 캐릭터 표시
+            const charactersContainer = document.getElementById('detailCharacters');
+            const charactersSection = document.getElementById('charactersSection');
+            
+            if (data.characters && data.characters.length > 0) {
+                charactersContainer.innerHTML = '';
+                data.characters.forEach(char => {
+                    const charItem = document.createElement('div');
+                    charItem.className = 'character-item';
+                    charItem.innerHTML = `
+                        <div class="character-name">${char.name}</div>
+                        <div class="character-meta">${char.genre} • ${char.message_count}개 메시지</div>
+                    `;
+                    charactersContainer.appendChild(charItem);
+                });
+                charactersSection.style.display = 'block';
+            } else {
+                charactersContainer.innerHTML = '<div class="empty-state">대화한 캐릭터가 없습니다</div>';
+                charactersSection.style.display = 'block';
+            }
             
             document.getElementById('detailModal').style.display = 'flex';
         })
