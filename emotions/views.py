@@ -5,8 +5,10 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
-from datetime import date
+from datetime import date, datetime
+from django.core.paginator import Paginator
 import json
+import calendar
 
 from .models import Emotion, Genre, EmotionGenreRecommendation, UserEmotionEntry
 
@@ -56,9 +58,7 @@ def save_emotion_entry(request):
     try:
         data = json.loads(request.body)
         emotion_id = data.get('emotion_id')
-        selected_genre_ids = data.get('selected_genres', [])
         note = data.get('note', '')
-        intensity = data.get('intensity', 5)
         entry_date = data.get('date', date.today().isoformat())
         
         # 감정 검증
@@ -66,7 +66,6 @@ def save_emotion_entry(request):
         
         # 날짜 파싱
         if isinstance(entry_date, str):
-            from datetime import datetime
             entry_date = datetime.strptime(entry_date, '%Y-%m-%d').date()
         
         # 기존 기록이 있으면 업데이트, 없으면 생성
@@ -76,7 +75,7 @@ def save_emotion_entry(request):
             defaults={
                 'emotion': emotion,
                 'note': note,
-                'intensity': intensity
+                'intensity': 5  # 기본값
             }
         )
         
@@ -84,15 +83,7 @@ def save_emotion_entry(request):
             # 기존 기록 업데이트
             entry.emotion = emotion
             entry.note = note
-            entry.intensity = intensity
             entry.save()
-        
-        # 선택된 장르들 설정
-        if selected_genre_ids:
-            genres = Genre.objects.filter(id__in=selected_genre_ids)
-            entry.selected_genres.set(genres)
-        else:
-            entry.selected_genres.clear()
         
         action = '업데이트' if not created else '저장'
         
@@ -110,14 +101,154 @@ def save_emotion_entry(request):
 
 
 @login_required
+def emotion_calendar(request):
+    """감정 캘린더 페이지"""
+    # 현재 연월 파라미터 처리
+    year = int(request.GET.get('year', datetime.now().year))
+    month = int(request.GET.get('month', datetime.now().month))
+    
+    # 해당 월의 감정 기록들 가져오기
+    entries = UserEmotionEntry.objects.filter(
+        user=request.user,
+        date__year=year,
+        date__month=month
+    ).select_related('emotion').order_by('date')
+    
+    # 날짜별로 정리
+    entries_by_date = {entry.date.day: entry for entry in entries}
+    
+    # 캘린더 데이터 생성
+    cal = calendar.monthcalendar(year, month)
+    
+    # 캘린더 주차별 데이터 가공 (템플릿에서 쉽게 사용하도록)
+    calendar_weeks_with_entries = []
+    for week in cal:
+        week_data = []
+        for day in week:
+            if day == 0:
+                week_data.append({'day': 0, 'entry': None})
+            else:
+                entry = entries_by_date.get(day)
+                week_data.append({'day': day, 'entry': entry})
+        calendar_weeks_with_entries.append(week_data)
+    
+    # 이전/다음 달 계산
+    if month == 1:
+        prev_year, prev_month = year - 1, 12
+    else:
+        prev_year, prev_month = year, month - 1
+        
+    if month == 12:
+        next_year, next_month = year + 1, 1
+    else:
+        next_year, next_month = year, month + 1
+    
+    # 월 이름
+    month_names = [
+        '', '1월', '2월', '3월', '4월', '5월', '6월',
+        '7월', '8월', '9월', '10월', '11월', '12월'
+    ]
+    
+    context = {
+        'year': year,
+        'month': month,
+        'month_name': month_names[month],
+        'calendar_weeks_with_entries': calendar_weeks_with_entries,  # 가공된 데이터
+        'entries_count': len(entries_by_date),
+        'prev_year': prev_year,
+        'prev_month': prev_month,
+        'next_year': next_year,
+        'next_month': next_month,
+        'today': date.today(),
+    }
+    
+    return render(request, 'emotions/emotion_calendar.html', context)
+
+@login_required
+def emotion_detail(request, entry_id):
+    """감정 기록 상세 정보 (AJAX)"""
+    entry = get_object_or_404(
+        UserEmotionEntry,
+        id=entry_id,
+        user=request.user
+    )
+    
+    data = {
+        'date': entry.date.strftime('%Y-%m-%d'),
+        'emotion': {
+            'name': entry.emotion.name,
+            'emoji': entry.emotion.emoji,
+            'description': entry.emotion.description
+        },
+        'note': entry.note,
+        'created_at': entry.created_at.strftime('%H:%M')
+    }
+    
+    return JsonResponse(data)
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_emotion_entry(request, entry_id):
+    """감정 기록 수정"""
+    entry = get_object_or_404(
+        UserEmotionEntry,
+        id=entry_id,
+        user=request.user
+    )
+    
+    try:
+        data = json.loads(request.body)
+        note = data.get('note', '')
+        
+        entry.note = note
+        entry.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': '감정 기록이 수정되었습니다.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'수정 중 오류가 발생했습니다: {str(e)}'
+        })
+
+
+@login_required
+@require_http_methods(["POST"])
+def delete_emotion_entry(request, entry_id):
+    """감정 기록 삭제"""
+    entry = get_object_or_404(
+        UserEmotionEntry,
+        id=entry_id,
+        user=request.user
+    )
+    
+    try:
+        entry.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': '감정 기록이 삭제되었습니다.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'삭제 중 오류가 발생했습니다: {str(e)}'
+        })
+
+
+@login_required
 def user_emotion_history(request):
     """사용자 감정 히스토리 페이지"""
     entries = UserEmotionEntry.objects.filter(
         user=request.user
     ).select_related('emotion').prefetch_related('selected_genres').order_by('-date')
     
-    # 페이지네이션 (선택사항)
-    from django.core.paginator import Paginator
+    # 페이지네이션
     paginator = Paginator(entries, 20)  # 페이지당 20개
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -132,7 +263,6 @@ def user_emotion_history(request):
         ).order_by('-count').first()
         
         # 이번 달 기록 수
-        from datetime import datetime
         current_month = datetime.now().month
         current_year = datetime.now().year
         this_month_count = entries.filter(
@@ -154,6 +284,7 @@ def user_emotion_history(request):
     return render(request, 'emotions/emotion_history.html', context)
 
 
+# API 엔드포인트들 (기존 유지)
 def api_emotions(request):
     """감정 목록 API (AJAX용)"""
     emotions = Emotion.objects.filter(is_active=True).order_by('order', 'name')
@@ -194,7 +325,6 @@ def api_recommendations(request, emotion_id):
             'genre': {
                 'id': rec.genre.id,
                 'name': rec.genre.name,
-                'icon': rec.genre.icon,
                 'description': rec.genre.description,
                 'category': rec.genre.category
             },

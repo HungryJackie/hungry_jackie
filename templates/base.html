@@ -337,16 +337,18 @@
 
       <!-- Right: desktop menu + mobile hamburger -->
       <div style="display:flex;align-items:center;gap:8px">
-        <!-- Desktop menu (also used as mobile dropdown container) -->
+        <!-- base.html의 메뉴 부분 수정 -->
         <div class="menu" id="navMenu">
           {% with path=request.path %}
             {% url 'characters:character_list' as list_url %}
             {% url 'characters:character_create' as create_url %}
             {% url 'characters:my_characters' as my_url %}
+            {% url 'emotions:emotion_selection' as emotion_url %}
+            {% url 'emotions:emotion_calendar' as calendar_url %}
 
             <!-- Characters -->
             <a href="{{ list_url }}"
-               class="link {% if path|slice:':12' == '/characters/' and path != create_url and path != my_url and not 'chat/' in path %}active{% endif %}">
+              class="link {% if path|slice:':12' == '/characters/' and path != create_url and path != my_url and not 'chat/' in path %}active{% endif %}">
               캐릭터 탐색
             </a>
 
@@ -357,14 +359,28 @@
 
             <hr class="menu-divider"/>
 
+            <!-- Emotions - 새로 추가되는 부분 -->
+            <a href="{{ emotion_url }}" 
+              class="link {% if path|slice:':10' == '/emotions/' and path != calendar_url %}active{% endif %}">
+              감정 기록
+            </a>
+
+            {% if user.is_authenticated %}
+              <a href="{{ calendar_url }}" class="link {% if path == calendar_url %}active{% endif %}">
+                감정 캘린더
+              </a>
+            {% endif %}
+
+            <hr class="menu-divider"/>
+
             <!-- Profile / Login -->
             {% if user.is_authenticated %}
               <a href="{% url 'profiles:profile' %}" class="profile">
                 {% if user.profile.is_profile_complete %}
                   <span class="avatar">
                     <img src="{% static 'images/profiles/' %}{{ user.profile.profile_image }}"
-                         alt="{{ user.profile.get_profile_image_display }}"
-                         onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=&quot;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:14px;font-weight:700;&quot;>{{ user.profile.display_name|first|upper }}</span>';">
+                        alt="{{ user.profile.get_profile_image_display }}"
+                        onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=&quot;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:14px;font-weight:700;&quot;>{{ user.profile.display_name|first|upper }}</span>';">
                   </span>
                   <span>{{ user.profile.display_name }}님</span>
                 {% else %}
