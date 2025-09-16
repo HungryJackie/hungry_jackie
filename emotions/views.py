@@ -17,13 +17,22 @@ def emotion_selection(request):
     """감정 선택 페이지"""
     emotions = Emotion.objects.filter(is_active=True).order_by('order', 'name')
     
+    # 오늘 이미 기록된 감정이 있는지 확인
+    today_entry = None
+    if request.user.is_authenticated:
+        today_entry = UserEmotionEntry.objects.filter(
+            user=request.user,
+            date=date.today()
+        ).select_related('emotion').prefetch_related('selected_genres').first()
+    
     context = {
         'emotions': emotions,
-        'page_title': '오늘 기분이 어떠신가요?'
+        'page_title': '오늘 기분이 어떠신가요?' if not today_entry else '오늘의 감정을 수정해보세요',
+        'today_entry': today_entry,
+        'is_edit_mode': bool(today_entry),
     }
     
     return render(request, 'emotions/emotion_selection.html', context)
-
 
 @login_required
 def get_recommendations(request, emotion_id):
@@ -59,6 +68,7 @@ def save_emotion_entry(request):
         data = json.loads(request.body)
         emotion_id = data.get('emotion_id')
         note = data.get('note', '')
+        selected_genre_ids = data.get('selected_genres', [])  # 추가
         entry_date = data.get('date', date.today().isoformat())
         
         # 감정 검증
@@ -84,6 +94,11 @@ def save_emotion_entry(request):
             entry.emotion = emotion
             entry.note = note
             entry.save()
+        
+        # 선택된 장르들 설정 (이미 있던 장르는 유지)
+        if selected_genre_ids:
+            genres = Genre.objects.filter(id__in=selected_genre_ids)
+            entry.selected_genres.add(*genres)
         
         action = '업데이트' if not created else '저장'
         
