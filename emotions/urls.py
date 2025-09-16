@@ -17,6 +17,10 @@ urlpatterns = [
     path('detail/<int:entry_id>/', views.emotion_detail, name='emotion_detail'),
     path('update/<int:entry_id>/', views.update_emotion_entry, name='update_emotion_entry'),
     path('delete/<int:entry_id>/', views.delete_emotion_entry, name='delete_emotion_entry'),
+
+    # 장르 선택
+    path('select-genre/', views.select_genre, name='select_genre'),
+
     
     # 사용자 감정 히스토리
     path('history/', views.user_emotion_history, name='emotion_history'),

@@ -11,6 +11,7 @@ import json
 import calendar
 
 from .models import Emotion, Genre, EmotionGenreRecommendation, UserEmotionEntry
+from characters.models import Conversation
 
 
 def emotion_selection(request):
@@ -188,6 +189,30 @@ def emotion_detail(request, entry_id):
         user=request.user
     )
     
+    # 해당 날짜의 대화 기록들 가져오기
+    conversations = Conversation.objects.filter(
+        user=request.user,
+        created_at__date=entry.date
+    ).select_related('character', 'character__genre')
+    
+    # 대화한 캐릭터들 정보
+    characters_info = []
+    for conv in conversations:
+        characters_info.append({
+            'name': conv.character.name,
+            'genre': conv.character.genre.name,
+            'message_count': conv.message_count,
+            'character_id': conv.character.id
+        })
+    
+    # 선택한 장르들
+    selected_genres = [
+        {
+            'id': genre.id,
+            'name': genre.name
+        } for genre in entry.selected_genres.all()
+    ]
+    
     data = {
         'date': entry.date.strftime('%Y-%m-%d'),
         'emotion': {
@@ -196,7 +221,9 @@ def emotion_detail(request, entry_id):
             'description': entry.emotion.description
         },
         'note': entry.note,
-        'created_at': entry.created_at.strftime('%H:%M')
+        'created_at': entry.created_at.strftime('%H:%M'),
+        'selected_genres': selected_genres,
+        'characters': characters_info
     }
     
     return JsonResponse(data)
@@ -349,3 +376,47 @@ def api_recommendations(request, emotion_id):
         })
     
     return JsonResponse(data)
+
+@login_required
+@require_http_methods(["POST"])
+def select_genre(request):
+    """장르 선택 처리"""
+    try:
+        data = json.loads(request.body)
+        emotion_id = data.get('emotion_id')
+        genre_id = data.get('genre_id')
+        
+        # 검증
+        emotion = get_object_or_404(Emotion, id=emotion_id, is_active=True)
+        genre = get_object_or_404(Genre, id=genre_id)
+        
+        # 오늘의 감정 기록 가져오거나 생성
+        today = date.today()
+        entry, created = UserEmotionEntry.objects.get_or_create(
+            user=request.user,
+            date=today,
+            defaults={
+                'emotion': emotion,
+                'note': '',
+                'intensity': 5
+            }
+        )
+        
+        # 장르 추가 (중복 방지)
+        entry.selected_genres.add(genre)
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{genre.name} 장르가 선택되었습니다!',
+            'genre': {
+                'id': genre.id,
+                'name': genre.name,
+                'description': genre.description
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'장르 선택 중 오류가 발생했습니다: {str(e)}'
+        })
