@@ -1,0 +1,759 @@
+{% extends "base.html" %}
+
+{% block title %}{{ emotion.name }} 감정을 위한 추천 - Hungry Jackie{% endblock %}
+
+{% block extra_head %}
+<style>
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .header {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .selected-emotion {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(135deg, {{ emotion.color_code }}, #8b5cf6);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .header-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .header-subtitle {
+        color: #666;
+        font-size: 16px;
+    }
+    
+    .recommendations {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .genre-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .genre-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .genre-card.selected {
+        border: 3px solid #10b981;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+    
+    .selected-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #10b981;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        transform: scale(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .genre-card.selected .selected-badge {
+        transform: scale(1);
+    }
+    
+    .genre-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f9ff;
+    }
+    
+    .genre-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+        font-weight: 700;
+    }
+    
+    .genre-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: #333;
+    }
+    
+    .priority-badge {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: auto;
+    }
+    
+    .match-percentage {
+        font-size: 14px;
+        color: #6366f1;
+        font-weight: 600;
+        margin-top: 5px;
+    }
+    
+    .reason-section {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .reason-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #1e40af;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+    
+    .reason-text {
+        color: #334155;
+        line-height: 1.6;
+        font-size: 15px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        text-decoration: none;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        border: 2px solid transparent;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-primary.selected {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        border-color: #10b981;
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    .btn-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .selected-genres-summary {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        display: none;
+    }
+    
+    .selected-genres-summary.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .summary-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #10b981;
+        margin-bottom: 12px;
+    }
+    
+    .summary-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .selected-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .selected-chip {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    
+    .summary-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    .back-link a {
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .back-link a:hover {
+        color: #374151;
+        text-decoration: underline;
+    }
+    
+    .back-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* 장르 선택 완료 모달 */
+    .selection-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    .selection-content {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 400px;
+        width: 90%;
+        position: relative;
+        animation: modalAppear 0.3s ease;
+    }
+    
+    @keyframes modalAppear {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    .selection-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .selection-genre {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+    
+    .selection-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 5px;
+    }
+    
+    .selection-subtitle {
+        color: #6b7280;
+        font-size: 14px;
+    }
+    
+    .selection-actions {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .selection-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .selection-btn:hover {
+        border-color: #6366f1;
+        background: #f0f9ff;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .selection-btn-icon {
+        width: 24px;
+        height: 24px;
+        color: #6366f1;
+    }
+    
+    .selection-text {
+        flex: 1;
+        text-align: left;
+    }
+    
+    .selection-btn-title {
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 2px;
+    }
+    
+    .selection-btn-desc {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .modal-close {
+        display: flex;
+        justify-content: center;
+    }
+
+    .close-btn {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .close-btn:hover {
+        background: #e5e7eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header">
+        <div class="selected-emotion">
+            {{ emotion.emoji }} {{ emotion.name }}
+        </div>
+        <h1 class="header-title">당신을 위한 맞춤 추천</h1>
+        <p class="header-subtitle">{{ emotion.description|default:"이 감정에 도움이 될 수 있는 장르들을 추천해드려요" }}</p>
+    </div>
+    
+    <!-- 선택된 장르 요약 -->
+    <div class="selected-genres-summary" id="selectedSummary">
+        <div class="summary-title">
+            <svg class="summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            선택한 장르
+        </div>
+        <div class="selected-items" id="selectedItems"></div>
+        <div class="summary-actions">
+            <a href="{% url 'characters:character_list' %}" class="btn btn-primary" id="exploreBtn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                캐릭터 탐색하기
+            </a>
+            <a href="{% url 'characters:character_create' %}" class="btn btn-secondary" id="createBtn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                캐릭터 만들기
+            </a>
+            <a href="{% url 'emotions:emotion_calendar' %}" class="btn btn-secondary">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                감정 캘린더
+            </a>
+        </div>
+    </div>
+    
+    <div class="recommendations">
+        {% for recommendation in recommendations %}
+            <div class="genre-card" data-genre-id="{{ recommendation.genre.id }}" data-genre-name="{{ recommendation.genre.name }}">
+                <div class="selected-badge">✓</div>
+                
+                <div class="genre-header">
+                    <div class="genre-icon">
+                        {{ recommendation.priority }}
+                    </div>
+                    <div style="flex: 1;">
+                        <div class="genre-name">{{ recommendation.genre.name }}</div>
+                        <div class="match-percentage">{{ recommendation.match_percentage }}% 매치</div>
+                    </div>
+                    <div class="priority-badge">{{ recommendation.priority }}순위</div>
+                </div>
+                
+                <div class="reason-section">
+                    <div class="reason-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        왜 이 장르를 추천했나요?
+                    </div>
+                    <div class="reason-text">
+                        {{ recommendation.reason }}
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary select-genre-btn" 
+                            data-genre-id="{{ recommendation.genre.id }}"
+                            data-genre-name="{{ recommendation.genre.name }}">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        이 장르 선택
+                    </button>
+                    <a href="{% url 'characters:recommended_characters' %}?emotion={{ emotion.id }}&genre={{ recommendation.genre.id }}" 
+                       class="btn btn-secondary">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        캐릭터 보기
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; color: #6b7280; padding: 3rem;">
+                <h3>아직 이 감정에 대한 추천이 준비되지 않았습니다.</h3>
+                <p>곧 다양한 장르 추천을 제공해드릴 예정입니다.</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div class="back-link">
+        <a href="{% url 'emotions:emotion_selection' %}">
+            <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            다른 감정 선택하기
+        </a>
+    </div>
+</div>
+
+<!-- 장르 선택 완료 모달 -->
+<div class="selection-modal" id="selectionModal">
+    <div class="selection-content">
+        <div class="selection-header">
+            <div class="selection-genre" id="selectionGenreIcon">📚</div>
+            <div class="selection-title" id="selectionGenreName">치유물</div>
+            <div class="selection-subtitle">장르가 선택되었습니다!</div>
+        </div>
+        
+        <div class="selection-actions">
+            <a href="#" class="selection-btn" id="selectionCharactersBtn">
+                <svg class="selection-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <div class="selection-text">
+                    <div class="selection-btn-title">이 장르의 캐릭터 보기</div>
+                    <div class="selection-btn-desc">맞춤 추천 캐릭터들을 만나보세요</div>
+                </div>
+            </a>
+            
+            <a href="#" class="selection-btn" id="selectionCreateBtn">
+                <svg class="selection-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <div class="selection-text">
+                    <div class="selection-btn-title">이 장르로 캐릭터 만들기</div>
+                    <div class="selection-btn-desc">나만의 맞춤 캐릭터를 생성해보세요</div>
+                </div>
+            </a>
+            
+            <a href="{% url 'emotions:emotion_calendar' %}" class="selection-btn">
+                <svg class="selection-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <div class="selection-text">
+                    <div class="selection-btn-title">감정 캘린더 보기</div>
+                    <div class="selection-btn-desc">나의 감정 기록을 확인해보세요</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="modal-close">
+            <button class="close-btn" onclick="closeSelectionModal()">닫기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedGenres = new Set();
+
+document.addEventListener('DOMContentLoaded', function() {
+    const selectButtons = document.querySelectorAll('.select-genre-btn');
+    const selectedSummary = document.getElementById('selectedSummary');
+    const selectedItems = document.getElementById('selectedItems');
+    const exploreBtn = document.getElementById('exploreBtn');
+    const createBtn = document.getElementById('createBtn');
+    const selectionModal = document.getElementById('selectionModal');
+    
+    // 장르 선택 버튼 이벤트
+    selectButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const genreId = this.dataset.genreId;
+            const genreName = this.dataset.genreName;
+            
+            selectGenre(genreId, genreName, this);
+        });
+    });
+    
+    function selectGenre(genreId, genreName, button) {
+        // 서버에 장르 선택 전송
+        fetch('{% url 'emotions:select_genre' %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                emotion_id: {{ emotion.id }},
+                genre_id: genreId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // UI 업데이트
+                updateGenreSelection(genreId, genreName, button);
+                
+                // 모달 표시
+                showSelectionModal(genreId, genreName);
+            } else {
+                alert('장르 선택 중 오류가 발생했습니다: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('장르 선택 중 오류가 발생했습니다.');
+        });
+    }
+    
+    function updateGenreSelection(genreId, genreName, button) {
+        // 장르 카드에 선택 표시
+        const card = button.closest('.genre-card');
+        card.classList.add('selected');
+        
+        // 버튼 상태 변경
+        button.classList.add('selected');
+        button.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>선택됨';
+        button.disabled = true;
+        
+        // 선택된 장르 목록에 추가
+        selectedGenres.add(genreId);
+        updateSelectedSummary();
+    }
+    
+    function updateSelectedSummary() {
+        if (selectedGenres.size > 0) {
+            selectedSummary.classList.add('show');
+            
+            // 선택된 장르 칩 업데이트
+            selectedItems.innerHTML = '';
+            selectedGenres.forEach(genreId => {
+                const card = document.querySelector(`[data-genre-id="${genreId}"]`);
+                const genreName = card.dataset.genreName;
+                
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip';
+                chip.textContent = genreName;
+                selectedItems.appendChild(chip);
+            });
+            
+            // 탐색 버튼 URL 업데이트 (첫 번째 선택된 장르로)
+            const firstGenreId = Array.from(selectedGenres)[0];
+            exploreBtn.href = `{% url 'characters:character_list' %}?genre=${firstGenreId}`;
+            createBtn.href = `{% url 'characters:character_create' %}?emotion={{ emotion.id }}&genre=${firstGenreId}`;
+        }
+    }
+    
+    function showSelectionModal(genreId, genreName) {
+        const modal = document.getElementById('selectionModal');
+        const genreIcon = document.getElementById('selectionGenreIcon');
+        const genreNameEl = document.getElementById('selectionGenreName');
+        const charactersBtn = document.getElementById('selectionCharactersBtn');
+        const createBtn = document.getElementById('selectionCreateBtn');
+        
+        // 모달 내용 업데이트
+        genreIcon.textContent = getGenreIcon(genreName);
+        genreNameEl.textContent = genreName;
+        
+        // 버튼 URL 설정
+        charactersBtn.href = `{% url 'characters:recommended_characters' %}?emotion={{ emotion.id }}&genre=${genreId}`;
+        createBtn.href = `{% url 'characters:character_create' %}?emotion={{ emotion.id }}&genre=${genreId}`;
+        
+        // 모달 표시
+        modal.style.display = 'flex';
+    }
+    
+    function getGenreIcon(genreName) {
+        const icons = {
+            '치유물': '🌱',
+            '일상물': '☕',
+            '동물물': '🐱',
+            '사이다물': '⚡',
+            '복수물': '⚔️',
+            '액션물': '💥',
+            '우정물': '🤝',
+            '가족물': '👨‍👩‍👧‍👦',
+            '성장물': '🌟',
+            '로맨스물': '💕',
+            '모험물': '🗺️',
+            '판타지물': '🔮',
+            '미스터리물': '🔍',
+            '스포츠물': '⚽'
+        };
+        return icons[genreName] || '📚';
+    }
+    
+    // 모달 닫기
+    window.closeSelectionModal = function() {
+        document.getElementById('selectionModal').style.display = 'none';
+    }
+    
+    // 모달 외부 클릭시 닫기
+    selectionModal.addEventListener('click', function(e) {
+        if (e.target === selectionModal) {
+            closeSelectionModal();
+        }
+    });
+    
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && selectionModal.style.display === 'flex') {
+            closeSelectionModal();
+        }
+    });
+    
+    // CSRF 토큰 가져오기
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+
+{% csrf_token %}
+{% endblock %}

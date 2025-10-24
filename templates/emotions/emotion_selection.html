@@ -1,0 +1,844 @@
+<!-- templates/emotions/emotion_selection.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if is_edit_mode %}오늘의 감정 수정{% else %}오늘의 감정 선택{% endif %} - Hungry Jackie
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .emotion-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    
+    .emotion-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .emotion-header h2 {
+        color: #111827;
+        font-size: 24px;
+        margin-bottom: 0.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .emotion-icon {
+        width: 32px;
+        height: 32px;
+        color: #6366f1;
+    }
+    
+    .emotion-header p {
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    /* 기존 기록 표시 영역 */
+    .current-record {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border: 2px solid #3b82f6;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .current-record-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .current-emotion {
+        font-size: 32px;
+    }
+    
+    .current-info h3 {
+        margin: 0 0 4px 0;
+        color: #1e40af;
+        font-weight: 700;
+    }
+    
+    .current-time {
+        color: #6b7280;
+        font-size: 14px;
+    }
+    
+    .current-note {
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 15px;
+        color: #374151;
+        font-style: italic;
+    }
+    
+    .current-note.empty {
+        color: #9ca3af;
+    }
+    
+    .current-genres {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .genre-chip {
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    
+    .current-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: #3b82f6;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .action-link:hover {
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    .action-link.secondary {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+    
+    .action-link.secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .action-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* 감정 선택 그리드 */
+    .emotion-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .emotion-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 15px;
+        border: 2px solid #e5e7eb;
+        border-radius: 16px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+    }
+    
+    .emotion-btn:hover {
+        border-color: #6366f1;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .emotion-btn.selected {
+        border-color: #6366f1;
+        background: #f0f9ff;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .emotion-btn.current {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .current-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #3b82f6;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    
+    .emotion-emoji {
+        font-size: 32px;
+        margin-bottom: 8px;
+    }
+    
+    .emotion-name {
+        font-weight: 600;
+        font-size: 16px;
+        color: #374151;
+        margin-bottom: 4px;
+    }
+    
+    .emotion-desc {
+        font-size: 12px;
+        color: #6b7280;
+        text-align: center;
+        line-height: 1.3;
+    }
+    
+    .next-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .next-btn.active {
+        opacity: 1;
+        cursor: pointer;
+    }
+    
+    .next-btn.active:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .back-link a {
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.3s;
+    }
+    
+    .back-link a:hover {
+        color: #374151;
+        text-decoration: underline;
+    }
+
+    /* 모달 스타일 - 기존과 동일 */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 400px;
+        width: 90%;
+        position: relative;
+        animation: modalAppear 0.3s ease;
+    }
+    
+    @keyframes modalAppear {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    .modal-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .modal-emotion {
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+    
+    .modal-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 5px;
+    }
+    
+    .modal-subtitle {
+        color: #6b7280;
+        font-size: 14px;
+    }
+    
+    .modal-form {
+        margin-bottom: 25px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+    }
+    
+    .form-textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 80px;
+        font-family: inherit;
+    }
+    
+    .form-textarea:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .btn {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    /* 다음 행동 선택 */
+    .next-actions {
+        display: none;
+    }
+    
+    .action-grid {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .action-btn:hover {
+        border-color: #6366f1;
+        background: #f0f9ff;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .action-btn-icon {
+        width: 24px;
+        height: 24px;
+        color: #6366f1;
+    }
+    
+    .action-text {
+        flex: 1;
+    }
+    
+    .action-title {
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 2px;
+    }
+    
+    .action-desc {
+        font-size: 12px;
+        color: #6b7280;
+    }
+    
+    .success-message {
+        text-align: center;
+        color: #10b981;
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .success-icon {
+        width: 20px;
+        height: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="emotion-container">
+    <div class="emotion-header">
+        <h2>
+            <svg class="emotion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+            {{ page_title }}
+        </h2>
+        {% if is_edit_mode %}
+            <p>오늘의 기록을 수정하거나 추가 활동을 선택해보세요!</p>
+        {% else %}
+            <p>현재 감정 상태를 선택해주시면 맞춤 콘텐츠를 추천해드릴게요!</p>
+        {% endif %}
+    </div>
+
+    <!-- 오늘의 기록이 있는 경우 표시 -->
+    {% if today_entry %}
+        <div class="current-record">
+            <div class="current-record-header">
+                <div class="current-emotion">{{ today_entry.emotion.emoji }}</div>
+                <div class="current-info">
+                    <h3>{{ today_entry.emotion.name }}</h3>
+                    <div class="current-time">{{ today_entry.created_at|date:"H:i" }}에 기록됨</div>
+                </div>
+            </div>
+            
+            <div class="current-note {% if not today_entry.note %}empty{% endif %}">
+                {% if today_entry.note %}
+                    "{{ today_entry.note }}"
+                {% else %}
+                    메모가 없습니다
+                {% endif %}
+            </div>
+            
+            {% if today_entry.selected_genres.exists %}
+                <div class="current-genres">
+                    {% for genre in today_entry.selected_genres.all %}
+                        <span class="genre-chip">{{ genre.name }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="current-actions">
+                <a href="{% url 'emotions:get_recommendations' today_entry.emotion.id %}" class="action-link">
+                    <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    장르 추천받기
+                </a>
+                
+                <a href="{% url 'characters:character_list' %}?genre={{ today_entry.selected_genres.first.id }}" class="action-link">
+                    <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    캐릭터 탐색
+                </a>
+                
+                <a href="{% url 'emotions:emotion_calendar' %}" class="action-link secondary">
+                    <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    감정 캘린더
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="emotion-grid">
+        {% for emotion in emotions %}
+            <div class="emotion-btn {% if today_entry and today_entry.emotion.id == emotion.id %}current{% endif %}" 
+                 data-emotion-id="{{ emotion.id }}" 
+                 data-emotion-name="{{ emotion.name }}" 
+                 data-emotion-emoji="{{ emotion.emoji }}">
+                {% if today_entry and today_entry.emotion.id == emotion.id %}
+                    <div class="current-badge">✓</div>
+                {% endif %}
+                <div class="emotion-emoji">{{ emotion.emoji }}</div>
+                <div class="emotion-name">{{ emotion.name }}</div>
+                <div class="emotion-desc">{{ emotion.sub_description|default:emotion.description|truncatechars:20 }}</div>
+            </div>
+        {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; color: #6b7280; padding: 2rem;">
+                <p>아직 감정 데이터가 등록되지 않았습니다.</p>
+                <p>관리자에게 문의하세요.</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <button class="next-btn" id="nextBtn">
+        {% if is_edit_mode %}감정 수정하기{% else %}감정 기록하기{% endif %}
+    </button>
+    
+    <div class="back-link">
+        <a href="{% url 'home' %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="display: inline; margin-right: 4px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            메인으로 돌아가기
+        </a>
+    </div>
+</div>
+
+<!-- 감정 기록/수정 모달 -->
+<div class="modal-overlay" id="emotionModal">
+    <div class="modal-content">
+        <!-- 1단계: 감정 기록/수정 -->
+        <div id="recordStep">
+            <div class="modal-header">
+                <div class="modal-emotion" id="modalEmotionEmoji"></div>
+                <div class="modal-title" id="modalEmotionName"></div>
+                <div class="modal-subtitle" id="modalSubtitle">
+                    {% if is_edit_mode %}오늘의 감정을 수정해보세요{% else %}오늘의 감정을 기록해보세요{% endif %}
+                </div>
+            </div>
+            
+            <div class="modal-form">
+                <div class="form-group">
+                    <label class="form-label">메모 (선택사항)</label>
+                    <textarea class="form-textarea" id="emotionNote" placeholder="오늘 이 감정을 느낀 이유나 상황을 간단히 적어보세요..."></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">취소</button>
+                <button class="btn btn-primary" id="saveBtn" onclick="saveEmotion()">
+                    {% if is_edit_mode %}수정하기{% else %}기록하기{% endif %}
+                </button>
+            </div>
+        </div>
+        
+        <!-- 2단계: 다음 행동 선택 -->
+        <div class="next-actions" id="nextStep">
+            <div class="modal-header">
+                <div class="success-message">
+                    <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span id="successText">감정이 기록되었습니다!</span>
+                </div>
+                <div class="modal-subtitle">다음에 무엇을 하시겠어요?</div>
+            </div>
+            
+            <div class="action-grid">
+                <a href="#" class="action-btn" id="recommendBtn">
+                    <svg class="action-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <div class="action-text">
+                        <div class="action-title">장르 추천받기</div>
+                        <div class="action-desc">내 감정에 맞는 콘텐츠 찾기</div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'emotions:emotion_calendar' %}" class="action-btn">
+                    <svg class="action-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <div class="action-text">
+                        <div class="action-title">감정 캘린더 보기</div>
+                        <div class="action-desc">지금까지의 감정 기록 확인</div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'home' %}" class="action-btn">
+                    <svg class="action-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <div class="action-text">
+                        <div class="action-title">메인으로 돌아가기</div>
+                        <div class="action-desc">다른 기능 둘러보기</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const emotionBtns = document.querySelectorAll('.emotion-btn');
+    const nextBtn = document.getElementById('nextBtn');
+    const modal = document.getElementById('emotionModal');
+    const recordStep = document.getElementById('recordStep');
+    const nextStep = document.getElementById('nextStep');
+    const saveBtn = document.getElementById('saveBtn');
+    const emotionNote = document.getElementById('emotionNote');
+    
+    let selectedEmotion = null;
+    const isEditMode = {{ is_edit_mode|yesno:"true,false" }};
+    
+    // 기존 기록이 있으면 미리 선택된 상태로 설정
+    {% if today_entry %}
+        selectedEmotion = {
+            id: {{ today_entry.emotion.id }},
+            name: "{{ today_entry.emotion.name|escapejs }}",
+            emoji: "{{ today_entry.emotion.emoji|escapejs }}"
+        };
+        nextBtn.classList.add('active');
+        nextBtn.disabled = false;
+        
+        // 기존 메모도 미리 설정
+        emotionNote.value = "{{ today_entry.note|escapejs }}";
+    {% endif %}
+    
+    // 감정 선택
+    emotionBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // 기존 선택 해제
+            emotionBtns.forEach(b => b.classList.remove('selected'));
+            
+            // 현재 버튼 선택
+            this.classList.add('selected');
+            selectedEmotion = {
+                id: this.dataset.emotionId,
+                name: this.dataset.emotionName,
+                emoji: this.dataset.emotionEmoji
+            };
+            
+            // 다음 버튼 활성화
+            nextBtn.classList.add('active');
+            nextBtn.disabled = false;
+        });
+    });
+    
+    // 감정 기록하기/수정하기 버튼 클릭
+    nextBtn.addEventListener('click', function() {
+        if (selectedEmotion) {
+            openModal();
+        }
+    });
+    
+    // 모달 열기
+    function openModal() {
+        document.getElementById('modalEmotionEmoji').textContent = selectedEmotion.emoji;
+        document.getElementById('modalEmotionName').textContent = selectedEmotion.name;
+        
+        // 1단계 표시, 2단계 숨기기
+        recordStep.style.display = 'block';
+        nextStep.style.display = 'none';
+        
+        modal.style.display = 'flex';
+        emotionNote.focus();
+    }
+    
+    // 모달 닫기
+    window.closeModal = function() {
+        modal.style.display = 'none';
+        // 수정 모드가 아닌 경우에만 메모 초기화
+        if (!isEditMode) {
+            emotionNote.value = '';
+        }
+    }
+    
+    // 모달 외부 클릭시 닫기
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+    
+    // 감정 저장/수정
+    window.saveEmotion = function() {
+        if (!selectedEmotion) return;
+        
+        saveBtn.disabled = true;
+        const actionText = isEditMode ? '수정' : '저장';
+        saveBtn.textContent = `${actionText} 중...`;
+        
+        const data = {
+            emotion_id: selectedEmotion.id,
+            note: emotionNote.value.trim(),
+            date: new Date().toISOString().split('T')[0]
+        };
+        
+        fetch('{% url 'emotions:save_emotion_entry' %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 성공 메시지 업데이트
+                const successText = document.getElementById('successText');
+                if (isEditMode) {
+                    successText.textContent = '감정이 수정되었습니다!';
+                } else {
+                    successText.textContent = '감정이 기록되었습니다!';
+                }
+                
+                // 2단계로 전환
+                recordStep.style.display = 'none';
+                nextStep.style.display = 'block';
+                
+                // 추천 버튼에 URL 설정
+                document.getElementById('recommendBtn').href = 
+                    `{% url 'emotions:get_recommendations' 0 %}`.replace('0', selectedEmotion.id);
+                    
+                // 수정 모드였다면 페이지 새로고침을 위한 플래그 설정
+                if (isEditMode) {
+                    sessionStorage.setItem('emotionUpdated', 'true');
+                }
+            } else {
+                alert(`${actionText} 중 오류가 발생했습니다: ` + data.message);
+                saveBtn.disabled = false;
+                saveBtn.textContent = `${actionText}하기`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(`${actionText} 중 오류가 발생했습니다.`);
+            saveBtn.disabled = false;
+            saveBtn.textContent = `${actionText}하기`;
+        });
+    }
+    
+    // 페이지 로드시 업데이트 확인
+    if (sessionStorage.getItem('emotionUpdated')) {
+        sessionStorage.removeItem('emotionUpdated');
+        // 페이지 새로고침하여 업데이트된 내용 표시
+        setTimeout(() => {
+            location.reload();
+        }, 1500); // 모달이 닫힌 후 새로고침
+    }
+    
+    // CSRF 토큰 가져오기
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // 현재 감정 버튼에 체크 표시가 있으면 자동으로 선택된 것처럼 표시
+    {% if today_entry %}
+        const currentBtn = document.querySelector('[data-emotion-id="{{ today_entry.emotion.id }}"]');
+        if (currentBtn) {
+            currentBtn.classList.add('selected');
+        }
+    {% endif %}
+});
+</script>
+
+{% csrf_token %}
+{% endblock %}

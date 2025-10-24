@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}내 프로필 - Hungry Jackie{% endblock %}
+
+{% block extra_head %}
+<style>
+    .profile-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 1rem;
+        padding: 2.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+        border: 1px solid #f3f4f6;
+    }
+    
+    .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: #f8f9fa;
+        border: 4px solid #e5e7eb;
+    }
+    
+    .profile-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.5rem;
+    }
+    
+    .profile-email {
+        color: #6b7280;
+        font-size: 1rem;
+    }
+    
+    .profile-info {
+        display: grid;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background-color: #f8fafc;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .info-icon {
+        width: 24px;
+        height: 24px;
+        color: #6366f1;
+        flex-shrink: 0;
+    }
+    
+    .info-content {
+        flex: 1;
+    }
+    
+    .info-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .profile-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary {
+        background-color: #6366f1;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #4f46e5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-secondary {
+        background-color: #f3f4f6;
+        color: #374151;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #e5e7eb;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-avatar" style="width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 1.5rem; overflow: hidden; border: 4px solid #e5e7eb; background-color: #f8f9fa;">
+                <img 
+                    src="{% static 'images/profiles/' %}{{ profile.profile_image }}"
+                    alt="{{ profile.get_profile_image_display }}"
+                    style="width: 120px; height: 120px; object-fit: cover;"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                >
+                <!-- 이미지 로드 실패시 기본 아바타 -->
+                <div style="display: none; width: 120px; height: 120px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 3rem; align-items: center; justify-content: center; font-weight: bold;">
+                    {{ profile.display_name|first|upper }}
+                </div>
+            </div>
+            <h1 class="profile-name">{{ profile.display_name }}</h1>
+            <p class="profile-email">{{ profile.user.email }}</p>
+        </div>
+        
+        <div class="profile-info">
+            <div class="info-item">
+                <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <div class="info-content">
+                    <div class="info-label">닉네임</div>
+                    <div class="info-value">{{ profile.nickname|default:"미설정" }}</div>
+                </div>
+            </div>
+                    
+            <div class="info-item">
+                <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <div class="info-content">
+                    <div class="info-label">가입일</div>
+                    <div class="info-value">{{ profile.created_at|date:"Y년 m월 d일" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="profile-actions">
+            <a href="{% url 'profiles:edit_profile' %}" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                프로필 수정
+            </a>
+            <a href="/" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                홈으로
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

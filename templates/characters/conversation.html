@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ conversation.character.name }}와의 대화 - Hungry Jackie{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── 주황색 테마 팔레트 ── */
+  :root{
+    --primary:#f97316;          /* orange-500 */
+    --primary-dark:#ea580c;     /* orange-600 */
+    --primary-light:#fed7aa;    /* orange-200 */
+    --primary-bg:#fff7ed;       /* orange-50 */
+    --panel:#ffffff;
+    --text:#1f2937;             /* gray-800 */
+    --text-light:#6b7280;       /* gray-500 */
+    --border:#e5e7eb;           /* gray-200 */
+    --char-bubble:#ffffff;      /* 캐릭터 말풍선: 흰색 + 테두리 */
+    --user-bubble:#f3f4f6;      /* 사용자 말풍선: 연회색 */
+    --shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+
+  /* === 레이아웃: 데스크톱에서 가로 폭 고정 ===
+     큰 화면: 항상 760px 고정 (내용 길이/인디케이터와 무관)
+     작은 화면(<=900px): 가로 100% */
+  .chat-container{
+    display:flex; flex-direction:column; height:100%;
+    background:var(--panel);
+    width:760px;
+    margin:0 auto;
+    overflow:hidden;
+    box-sizing:border-box;
+  }
+  @media (max-width:900px){
+    .chat-container{ width:100%; }
+  }
+
+  /* 헤더 */
+  .chat-header{
+    background:var(--panel); border-bottom:1px solid var(--border);
+    padding:1rem 1.5rem; display:flex; align-items:center; gap:.75rem;
+    box-shadow:var(--shadow); flex-shrink:0; z-index:10;
+  }
+  .char-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid var(--border);background:#f8fafc;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .char-avatar img{width:100%;height:100%;object-fit:cover}
+  .char-info h2{font-size:1.1rem;font-weight:600;color:var(--text);margin:0 0 .25rem}
+  .char-status{font-size:.85rem;color:var(--text-light);display:flex;align-items:center;gap:.25rem}
+  .status-dot{width:6px;height:6px;background:var(--primary);border-radius:50%}
+
+  /* 크레딧 배지(하트 아이콘) */
+  .credit-badge{
+    margin-left:auto; background:#f3f4f6; color:#374151;
+    padding:.45rem .65rem; border-radius:18px; font-size:.85rem; font-weight:700;
+    border:1px solid var(--border);
+    display:inline-flex; align-items:center; gap:.35rem;
+  }
+  .credit-badge .heart{ width:26px; height:26px; fill:var(--primary); }
+
+  /* 메시지 영역 */
+  .messages-container{flex:1; overflow-y:auto; padding:1rem 0; scroll-behavior:smooth}
+  .messages-container.empty{display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+  .empty-state{max-width:520px;width:100%;border:1px dashed var(--border);border-radius:16px;background:#fff;box-shadow:var(--shadow);padding:1.25rem}
+  .empty-state h3{margin:0 0 .5rem;color:var(--text);font-size:1rem}
+  .empty-state p{margin:0;color:var(--text-light);font-size:.9rem}
+
+  .message-group{display:flex;margin-bottom:1rem;padding:0 1.5rem}
+  .message-group.user{justify-content:flex-end}
+  .message-group.character{justify-content:flex-start}
+
+  .message-avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1.5px solid var(--border);background:#f8fafc;margin-right:.75rem;flex-shrink:0;align-self:flex-end}
+  .message-group.user .message-avatar{order:2;margin-right:0;margin-left:.75rem}
+  .message-avatar img{width:100%;height:100%;object-fit:cover}
+  .user-avatar-placeholder{
+    width:36px;height:36px;border-radius:50%;
+    background:var(--primary); color:#ffffff; display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:.9rem; border:1px solid var(--border);
+  }
+
+  /* 말풍선은 내용과 무관하게 안정된 최대폭을 갖도록 */
+  .message-content{max-width:520px; width:100%; display:flex; flex-direction:column}
+  .message-group.user .message-content{align-items:flex-end}
+  .message-group.character .message-content{align-items:flex-start}
+
+  .message-sender{font-size:.8rem;color:var(--text-light);margin-bottom:.25rem;padding:0 .75rem}
+  .message-bubble{
+    padding:.75rem 1rem; border-radius:18px; font-size:.95rem; line-height:1.5;
+    word-wrap:break-word; position:relative; width:100%;
+    box-sizing:border-box;
+  }
+  .message-group.user .message-bubble{background:var(--user-bubble);color:var(--text);border:1px solid var(--border);border-bottom-right-radius:6px}
+  .message-group.character .message-bubble{background:var(--char-bubble);color:var(--text);border-bottom-left-radius:6px;border:1px solid var(--border)}
+  .message-time{font-size:.75rem;color:var(--text-light);margin-top:.25rem;padding:0 .75rem}
+
+  /* 입력 영역 */
+  .input-container{
+    background:var(--panel); border-top:1px solid var(--border);
+    padding:1rem 1.5rem; display:flex; gap:.75rem; align-items:flex-end; flex-shrink:0;
+  }
+  .message-input{
+    flex:1 1 0; min-width:0; width:100%; display:block;
+    border:1px solid var(--border); border-radius:20px; padding:.75rem 1rem; font-size:.95rem;
+    resize:none; max-height:120px; min-height:44px; background:#f8fafc; transition:all .2s;
+    line-height:1.4; word-break:keep-all; writing-mode:horizontal-tb;
+    -webkit-appearance:textarea; -moz-appearance:textarea; appearance:textarea;
+  }
+  .message-input:focus{outline:none;border-color:var(--primary-light);background:#ffffff;box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+  .send-button{
+    background:var(--primary); color:#fff; border:1px solid var(--primary-dark);
+    width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0
+  }
+  .send-button:hover{background:var(--primary-dark);transform:scale(1.05)}
+  .send-button:active{transform:scale(.96)}
+  .send-button:disabled{background:#e5e7eb;color:#9ca3af;border-color:#e5e7eb;cursor:not-allowed;transform:none}
+
+  /* 타이핑 행(캐릭터 레이아웃) */
+  .typing-row{display:none}
+  .typing-bubble{
+    background:var(--char-bubble); border:1px solid var(--border);
+    border-radius:18px; padding:1rem; display:inline-flex; align-items:center; gap:.35rem;
+    width:100%; min-width:100%; justify-content:flex-start;
+    box-sizing:border-box;
+  }
+  .typing-dot{width:6px;height:6px;background:#9aa1ab;border-radius:50%;animation:typing 1.4s infinite}
+  .typing-dot:nth-child(2){animation-delay:.2s}
+  .typing-dot:nth-child(3){animation-delay:.4s}
+  @keyframes typing{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
+
+  /* 스크롤바 */
+  .messages-container::-webkit-scrollbar{width:6px}
+  .messages-container::-webkit-scrollbar-track{background:transparent}
+  .messages-container::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
+  .messages-container::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-page">
+
+  {# Django 플래시 메시지 #}
+  {% with django_messages=messages %}
+    {% if django_messages %}
+      <div style="position:fixed; top:80px; left:50%; transform:translateX(-50%); z-index:1000; max-width:420px;">
+        {% for m in django_messages %}
+          <div class="alert alert-{{ m.tags }}">{{ m }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="chat-container">
+
+    <!-- 헤더 -->
+    <div class="chat-header">
+      <div class="char-avatar">
+        {% if conversation.character.character_image %}
+          <img src="{{ conversation.character.character_image.url }}" alt="{{ conversation.character.name }}">
+        {% else %}
+          <img src="{% static 'images/profiles/default_2.png' %}" alt="{{ conversation.character.name }}">
+        {% endif %}
+      </div>
+      <div class="char-info">
+        <h2>{{ conversation.character.name }}</h2>
+        <div class="char-status"><span class="status-dot"></span>온라인</div>
+      </div>
+
+      <!-- 하트 아이콘 크레딧 -->
+      <div class="credit-badge" title="보유 하트">
+        <svg viewBox="0 0 24 24" class="heart" aria-hidden="true">
+          <path d="M3.172 5.172a4 4 0 015.656 0L12 8.343l3.172-3.171a4 4 0 115.656 5.656L12 19.657l-8.828-8.829a4 4 0 010-5.656z"/>
+        </svg>
+        <span>{{ user_credit.total_credits }}</span>
+      </div>
+    </div>
+
+    <!-- 메시지 영역 -->
+    <div class="messages-container {% if chat_messages|length == 0 %}empty{% endif %}" id="messagesContainer">
+      {% if chat_messages|length == 0 %}
+        <div class="empty-state">
+          <h3>{{ conversation.character.name }}와의 첫 대화를 시작해보세요! 👋</h3>
+          <p>아래 입력창에 메시지를 적고 Enter를 누르면 캐릭터가 곧 답장을 보냅니다.</p>
+        </div>
+      {% endif %}
+
+      {% for m in chat_messages %}
+        <div class="message-group {{ m.sender }}">
+          {% if m.sender == 'character' %}
+            <div class="message-avatar">
+              {% if conversation.character.character_image %}
+                <img src="{{ conversation.character.character_image.url }}" alt="{{ conversation.character.name }}">
+              {% else %}
+                <img src="{% static 'images/profiles/default_2.png' %}" alt="{{ conversation.character.name }}">
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="user-avatar-placeholder">{{ conversation.user.profile.display_name|first|upper }}</div>
+          {% endif %}
+
+          <div class="message-content">
+            <div class="message-sender">
+              {% if m.sender == 'user' %}
+                {{ conversation.user.profile.display_name }}
+              {% elif m.sender == 'character' %}
+                {{ conversation.character.name }}
+              {% else %}시스템{% endif %}
+            </div>
+            <div class="message-bubble">{{ m.content }}</div>
+            <div class="message-time">{{ m.timestamp|date:"H:i" }}</div>
+          </div>
+        </div>
+      {% endfor %}
+
+      <!-- 타이핑 인디케이터: 캐릭터 말풍선과 동일 레이아웃 + 폭 고정 -->
+      <div class="message-group character typing-row" id="typingRow" aria-live="polite">
+        <div class="message-avatar">
+          {% if conversation.character.character_image %}
+            <img src="{{ conversation.character.character_image.url }}" alt="{{ conversation.character.name }}">
+          {% else %}
+            <img src="{% static 'images/profiles/default_2.png' %}" alt="{{ conversation.character.name }}">
+          {% endif %}
+        </div>
+        <div class="message-content">
+          <div class="message-sender">{{ conversation.character.name }}</div>
+          <div class="message-bubble typing-bubble">
+            <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 입력 -->
+    <div class="input-container">
+      <textarea id="messageInput" class="message-input"
+                placeholder="{{ conversation.character.name }}에게 메시지를 보내세요..." rows="1"></textarea>
+      <button id="sendButton" class="send-button" aria-label="전송">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const messageInput = document.getElementById('messageInput');
+  const sendButton = document.getElementById('sendButton');
+  const messagesContainer = document.getElementById('messagesContainer');
+  const typingRow = document.getElementById('typingRow');
+  const creditCountEl = document.querySelector('.credit-badge span');
+  let isLoading = false;
+
+  const characterName = '{{ conversation.character.name|escapejs }}';
+  const userDisplayName = '{{ conversation.user.profile.display_name|escapejs }}';
+  const characterAvatar = `{% if conversation.character.character_image %}{{ conversation.character.character_image.url|escapejs }}{% else %}{% static 'images/profiles/default_2.png' %}{% endif %}`;
+
+  function scrollToBottom(){ messagesContainer.scrollTop = messagesContainer.scrollHeight; }
+  scrollToBottom();
+
+  // textarea 자동 높이
+  messageInput.addEventListener('input', function(){
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
+  // 안전 텍스트
+  function escapeHTML(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  function addMessage(sender, content, senderName, avatarSrc){
+    const group = document.createElement('div');
+    group.className = `message-group ${sender} new-message`;
+
+    let avatarHTML = '';
+    if(sender === 'character'){
+      avatarHTML = `<div class="message-avatar"><img src="${avatarSrc}" alt="${senderName}"></div>`;
+    }else{
+      const initial = (senderName||'').charAt(0).toUpperCase();
+      avatarHTML = `<div class="user-avatar-placeholder">${initial}</div>`;
+    }
+
+    const now = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+    group.innerHTML = `${avatarHTML}
+      <div class="message-content">
+        <div class="message-sender">${escapeHTML(senderName)}</div>
+        <div class="message-bubble">${escapeHTML(content)}</div>
+        <div class="message-time">${now}</div>
+      </div>`;
+
+    // 빈 상태 제거
+    messagesContainer.classList.remove('empty');
+    const empty = messagesContainer.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    messagesContainer.insertBefore(group, typingRow);
+    scrollToBottom();
+  }
+
+  function showTyping(){ typingRow.style.display='flex'; scrollToBottom(); }
+  function hideTyping(){ typingRow.style.display='none'; }
+
+  async function sendMessage(){
+    const msg = messageInput.value.trim();
+    if(!msg || isLoading) return;
+
+    isLoading = true;
+    sendButton.disabled = true; messageInput.disabled = true;
+
+    addMessage('user', msg, userDisplayName, null);
+    messageInput.value=''; messageInput.style.height='auto';
+    showTyping();
+
+    try{
+      const res = await fetch("{% url 'characters:send_message' conversation.id %}", {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+        body:JSON.stringify({message: msg})
+      });
+      const data = await res.json();
+      hideTyping();
+
+      if(data.success){
+        addMessage('character', data.ai_response || '', characterName, characterAvatar);
+        if (typeof data.remaining_credits !== 'undefined' && creditCountEl){
+          creditCountEl.textContent = data.remaining_credits;
+        }
+      }else{
+        addMessage('character', data.error || '죄송합니다. 오류가 발생했습니다.', characterName, characterAvatar);
+      }
+    }catch(e){
+      console.error(e);
+      hideTyping();
+      addMessage('character', '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', characterName, characterAvatar);
+    }finally{
+      isLoading = false; sendButton.disabled = false; messageInput.disabled = false; messageInput.focus();
+    }
+  }
+
+  sendButton.addEventListener('click', sendMessage);
+  messageInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }});
+  messageInput.focus();
+});
+</script>
+{% endblock %}

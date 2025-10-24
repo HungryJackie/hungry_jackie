@@ -1,0 +1,617 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  {% if mode == 'edit' %}캐릭터 수정 | Hungry Jackie{% else %}캐릭터 만들기 | Hungry Jackie{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <style>
+    :root{
+      --bg:#ffffff; --panel:#fff; --muted:#6b7280; --title:#111827;
+      --line:#e5e7eb; --soft:#f3f4f6; --brand:#6366f1; --brand-2:#8b5cf6;
+      --ok:#10b981; --warn:#f59e0b; --chip:#eef2ff;
+    }
+    .page{max-width:1100px;margin:0 auto}
+    .topbar{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;color:#6b7280}
+    .h1{font-size:2rem;font-weight:800;color:var(--title);margin:0 0 .75rem}
+
+    /* 감정-장르 헤더 */
+    .emotion-genre-header {
+      background: linear-gradient(135deg, {{ emotion.color_code|default:'#6366f1' }}, #8b5cf6);
+      color: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    
+    .combo-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    
+    .combo-description {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    /* 가이드 섹션 */
+    .guide-section {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .guide-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 1rem;
+    }
+    
+    .guide-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--brand);
+    }
+    
+    .guide-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .keyword-chip {
+      background: var(--chip);
+      color: #3730a3;
+      padding: 0.25rem 0.75rem;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    
+    .suggestions-grid {
+      display: grid;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    
+    .suggestion-category {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    
+    .suggestion-title {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .suggestion-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .suggestion-item {
+      padding: 0.5rem;
+      color: #64748b;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 4px;
+      margin: 0.25rem 0;
+    }
+    
+    .suggestion-item:hover {
+      color: var(--brand);
+      background: #f0f9ff;
+      transform: translateX(2px);
+    }
+    
+    .suggestion-item::before {
+      content: '•';
+      color: var(--brand);
+      margin-right: 0.5rem;
+    }
+    
+    .toggle-guide {
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      color: #6b7280;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      margin-left: auto;
+    }
+    
+    .toggle-guide:hover {
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+
+    /* 단계 탭 */
+    .steps{display:flex;gap:.75rem;margin:1rem 0 1.25rem}
+    .step{flex:1;display:flex;align-items:center;gap:.5rem;background:#fff;border:1px solid var(--line);padding:.8rem 1rem;border-radius:12px;color:#374151}
+    .step .n{width:28px;height:28px;border-radius:9999px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:800;color:#555}
+    .step.active{border-color:var(--brand); box-shadow:0 4px 14px rgba(99,102,241,.1)}
+    .step.active .n{background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff}
+    .step small{color:var(--muted)}
+
+    /* 2열 레이아웃 */
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:1.25rem}
+    .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.25rem}
+    .card h3{margin:.25rem 0 1rem;font-size:1rem;color:#111827}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .field{margin-bottom:1rem}
+    .label{display:block;margin-bottom:.5rem;font-weight:700;color:#374151}
+    .input,.select,.textarea{
+      width:100%;border:1px solid var(--line);border-radius:.75rem;background:#fff;
+      padding:.8rem .95rem;font:inherit;color:#111827;outline:none;
+    }
+    .textarea{min-height:120px;resize:vertical}
+    .help{font-size:.85rem;color:var(--muted);margin-top:.4rem}
+    .errorlist{margin:.4rem 0 0;padding:0;list-style:none;color:#dc2626;font-size:.9rem}
+
+    /* 업로드 박스 */
+    .drop{
+      display:flex; flex-wrap:wrap; gap:1rem; align-items:center;
+      border:1.5px dashed var(--line); border-radius:1rem;
+      padding:1rem; background:#fafafa; min-height:140px;
+    }
+    .avatar-xl{
+      width:120px; height:120px; border-radius:16px;
+      overflow:hidden; background:#f3f4f6; border:1px solid var(--line);
+      display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+    }
+    .avatar-xl img{ width:100%; height:100%; object-fit:cover; display:block }
+
+    .file-ui{ display:flex; flex-direction:column; gap:.5rem; min-width:240px; }
+    .file-row{ display:flex; gap:.5rem; align-items:center; flex-wrap:wrap }
+    .input-file{ display:none }
+    .btn-file{
+      appearance:none; border:1px solid var(--line); background:#fff;
+      padding:.6rem .9rem; border-radius:.7rem; cursor:pointer; font-weight:700;
+    }
+    .filename{ color:#6b7280; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+
+    /* 프리뷰 카드(우측) */
+    .pv-head{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+    .avatar{
+      width:56px;height:56px;border-radius:12px;overflow:hidden;
+      border:1px solid var(--line);background:#ffffff;display:flex;
+      align-items:center;justify-content:center;padding:4px;
+    }
+    .avatar img{width:100%;height:100%;object-fit:contain;display:block;background:#ffffff}
+    .pv-name{font-weight:800}
+
+    .bubble{background:var(--soft);border:1px solid var(--line);padding:.75rem 1rem;border-radius:14px;display:inline-block;margin:.35rem 0}
+    .muted{color:var(--muted);font-size:.9rem}
+
+    .actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:.25rem}
+    .btn{border:1px solid var(--line);background:#fff;padding:.8rem 1.1rem;border-radius:.8rem;cursor:pointer;font-weight:700}
+    .btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff; border:none}
+    .btn-ghost{background:#fff}
+    .btn-block{width:100%}
+
+    /* 토글 세그먼트 */
+    .seg{display:inline-flex;border:1px solid var(--line);border-radius:9999px;overflow:hidden}
+    .seg a{padding:.45rem .9rem;text-decoration:none;color:#374151}
+    .seg a.active{background:var(--chip);color:#3730a3;font-weight:800}
+
+    /* 반응형 */
+    @media (max-width:1024px){ 
+      .grid{grid-template-columns:1fr}
+    }
+  </style>
+
+  <div class="page">
+    <div class="topbar">
+      <span style="padding:.35rem .6rem;border:1px solid var(--line);border-radius:9999px;background:#fff;">
+        {% if mode == 'edit' %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          캐릭터 수정
+        {% else %}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          새 캐릭터
+        {% endif %}
+      </span>
+    </div>
+
+    <h1 class="h1">{% if mode == 'edit' %}캐릭터 수정{% else %}캐릭터 만들기{% endif %}</h1>
+
+    <!-- 감정-장르 조합 헤더 (연동 생성 시에만 표시) -->
+    {% if emotion and genre %}
+      <div class="emotion-genre-header">
+        <div class="combo-title">
+          {{ emotion.emoji }} {{ emotion.name }} × {{ genre.name }}
+        </div>
+        <div class="combo-description">
+          {{ emotion.description }} 감정을 위한 {{ genre.name }} 캐릭터를 만들어보세요
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 캐릭터 생성 가이드 (연동 생성 시에만 표시) -->
+    {% if character_guide %}
+      <div class="guide-section" id="guideSection">
+        <div class="guide-title">
+          <svg class="guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+          맞춤 캐릭터 생성 가이드
+          <button type="button" class="toggle-guide" onclick="toggleGuide()">
+            <span id="toggleText">숨기기</span>
+          </button>
+        </div>
+        
+        <div id="guideContent">
+          <!-- 관련 키워드 -->
+          {% if character_guide.keywords %}
+            <div style="margin-bottom: 1rem;">
+              <div style="font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                관련 키워드
+              </div>
+              <div class="guide-keywords">
+                {% for keyword in character_guide.keywords %}
+                  <span class="keyword-chip">{{ keyword }}</span>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+          
+          <!-- 제안 사항들 -->
+          <div class="suggestions-grid">
+            <div class="suggestion-category">
+              <div class="suggestion-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                성격 제안
+              </div>
+              <ul class="suggestion-list">
+                {% for suggestion in character_guide.personality_suggestions %}
+                  <li class="suggestion-item" onclick="insertSuggestion('personality', '{{ suggestion|escapejs }}')">
+                    {{ suggestion }}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+            
+            <div class="suggestion-category">
+              <div class="suggestion-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                말투 제안
+              </div>
+              <ul class="suggestion-list">
+                {% for suggestion in character_guide.speaking_style_suggestions %}
+                  <li class="suggestion-item" onclick="insertSuggestion('speaking_style', '{{ suggestion|escapejs }}')">
+                    {{ suggestion }}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+            
+            <div class="suggestion-category">
+              <div class="suggestion-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                배경 제안
+              </div>
+              <ul class="suggestion-list">
+                {% for suggestion in character_guide.background_suggestions %}
+                  <li class="suggestion-item" onclick="insertSuggestion('background_story', '{{ suggestion|escapejs }}')">
+                    {{ suggestion }}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 단계 표시 -->
+    <div class="steps">
+      <div class="step active"><div class="n">1</div><div><div><b>기본</b> <small>이미지·이름·장르</small></div></div></div>
+      <div class="step"><div class="n">2</div><div><div><b>성격/말투</b> <small>배경 포함</small></div></div></div>
+      <div class="step"><div class="n">3</div><div><div><b>태그·공개</b> <small>확인 후 {% if mode == 'edit' %}저장{% else %}생성{% endif %}</small></div></div></div>
+    </div>
+
+    <form id="charForm" method="post" enctype="multipart/form-data" class="grid">
+      {% csrf_token %}
+
+      <!-- 좌측: 입력 패널 -->
+      <div class="card">
+        <h3>프로필 & 설정</h3>
+
+        <!-- STEP 1 -->
+        <section id="step1">
+          <div class="field">
+            <label class="label">캐릭터 이미지</label>
+            <div class="drop">
+              <!-- 썸네일 -->
+              <div class="avatar-xl">
+                {% if mode == 'edit' and form.instance.character_image %}
+                  <img id="preview" src="{{ form.instance.character_image.url }}" alt="preview">
+                {% else %}
+                  <img id="preview" src="{% static 'images/profiles/default_2.png' %}" alt="preview">
+                {% endif %}
+              </div>
+
+              <!-- 파일 선택 -->
+              <div class="file-ui">
+                <div class="file-row">
+                  <label for="id_character_image" class="btn-file">이미지 선택</label>
+                  <span class="filename" id="filename">선택된 파일 없음</span>
+                </div>
+                <input class="input-file" type="file" name="character_image" id="id_character_image" accept="image/*">
+                <div class="help">정사각형 권장 · 최대 2MB · JPG/PNG/GIF/WebP</div>
+                {{ form.character_image.errors }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label class="label">이름</label>
+              {{ form.name }}
+              {{ form.name.errors }}
+              <div class="help">2–50자</div>
+            </div>
+
+            <div class="field">
+              <label class="label">장르</label>
+              {{ form.genre }}
+              {{ form.genre.errors }}
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">한 줄 소개</label>
+            {{ form.description }}
+            {{ form.description.errors }}
+          </div>
+
+          <!-- 공개 범위: 공개/비공개 -->
+          <div class="field">
+            <label class="label">공개 범위</label>
+            <div class="seg" role="tablist" aria-label="visibility">
+              <a href="#" class="seg-public"  data-v="public"  onclick="setVis(event,'public')">공개</a>
+              <a href="#" class="seg-private" data-v="private" onclick="setVis(event,'private')">비공개</a>
+            </div>
+            <div style="display:none">
+              {{ form.visibility }}
+            </div>
+            {{ form.visibility.errors }}
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn btn-ghost" onclick="location.href='{% url 'characters:my_characters' %}'">내 캐릭터</button>
+            <button type="button" class="btn btn-primary" onclick="goStep(2)">다음</button>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section id="step2" style="display:none">
+          <div class="row">
+            <div class="field">
+              <label class="label">성격 설정</label>
+              {{ form.personality }}
+              {{ form.personality.errors }}
+              <div class="help">성격, 특징, 행동 패턴 등을 자세히 작성하세요.</div>
+            </div>
+            <div class="field">
+              <label class="label">말투/대화 스타일</label>
+              {{ form.speaking_style }}
+              {{ form.speaking_style.errors }}
+              <div class="help">말버릇, 1인칭/2인칭, 존댓말/반말 등</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">배경 이야기</label>
+            {{ form.background_story }}
+            {{ form.background_story.errors }}
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn" onclick="goStep(1)">이전</button>
+            <button type="button" class="btn btn-primary" onclick="goStep(3)">다음</button>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section id="step3" style="display:none">
+          <div class="field">
+            <label class="label">태그</label>
+            {{ form.tags }}
+            {{ form.tags.errors }}
+            <div class="help">쉼표( , )로 구분 — 예) 힐링, 다정</div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn" onclick="goStep(2)">이전</button>
+            <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}수정 저장{% else %}저장{% endif %}</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- 우측: 채팅 미리보기 -->
+      <aside class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
+          <h3>채팅 미리보기</h3>
+          <span class="seg"><a class="active">내 캐릭터</a><a>저장</a></span>
+        </div>
+
+        <div class="pv-head">
+          <div class="avatar">
+            {% if mode == 'edit' and form.instance.character_image %}
+              <img id="pv-avatar" src="{{ form.instance.character_image.url }}" alt="">
+            {% else %}
+              <img id="pv-avatar" src="{% static 'images/profiles/default_2.png' %}" alt="">
+            {% endif %}
+          </div>
+          <div>
+            <div class="pv-name" id="pv-name">{{ form.instance.name|default:"이름 미정" }}</div>
+          </div>
+        </div>
+
+        <div class="bubble" id="pv-b1">안녕! 오늘은 좀 지친 하루였어</div>
+        <div class="bubble muted" id="pv-b2">
+          {% if form.instance.speaking_style %}대화 톤 예: {{ form.instance.speaking_style }}{% else %}말투/스타일을 적으면 여기에 톤이 반영돼요.{% endif %}
+        </div>
+
+        <div class="help" style="margin-top:.5rem;">※ 실서비스 품질은 입력한 캐릭터 설정의 구체성에 비례합니다.</div>
+      </aside>
+    </form>
+  </div>
+
+  <script>
+    /* 단계 전환 */
+    const steps = [1,2,3];
+    function goStep(n){
+      steps.forEach(i=>{
+        document.getElementById('step'+i).style.display = (i===n)?'block':'none';
+        const el = document.querySelectorAll('.steps .step')[i-1];
+        el.classList.toggle('active', i===n);
+      });
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    /* 가이드 토글 */
+    function toggleGuide() {
+      const content = document.getElementById('guideContent');
+      const text = document.getElementById('toggleText');
+      const isHidden = content.style.display === 'none';
+      
+      content.style.display = isHidden ? 'block' : 'none';
+      text.textContent = isHidden ? '숨기기' : '보기';
+    }
+
+    /* 제안사항 클릭으로 필드에 삽입 */
+    function insertSuggestion(fieldType, suggestion) {
+      const fieldMap = {
+        'personality': 'id_personality',
+        'speaking_style': 'id_speaking_style', 
+        'background_story': 'id_background_story'
+      };
+      
+      const fieldId = fieldMap[fieldType];
+      const field = document.getElementById(fieldId);
+      
+      if (field) {
+        // 기존 내용이 있으면 줄바꿈 후 추가, 없으면 그냥 추가
+        const currentValue = field.value.trim();
+        const newValue = currentValue 
+          ? currentValue + '\n\n' + suggestion 
+          : suggestion;
+        
+        field.value = newValue;
+        field.focus();
+        
+        // 시각적 피드백
+        const suggestionItem = event.target;
+        const originalColor = suggestionItem.style.color;
+        suggestionItem.style.color = 'var(--ok)';
+        suggestionItem.style.fontWeight = '600';
+        
+        setTimeout(() => {
+          suggestionItem.style.color = originalColor;
+          suggestionItem.style.fontWeight = '';
+        }, 1000);
+      }
+    }
+
+    /* 공개범위 UI <-> 실제 폼 필드 동기화 */
+    function syncSegFromValue(v){
+      const pub = document.querySelector('.seg-public');
+      const pri = document.querySelector('.seg-private');
+      if(!pub || !pri) return;
+      pub.classList.toggle('active', v==='public');
+      pri.classList.toggle('active', v==='private');
+    }
+    function setVis(e,v){
+      e.preventDefault();
+      const sel = document.getElementById('id_visibility');
+      if(sel){ sel.value = v; syncSegFromValue(v); }
+    }
+    (function initVisibility(){
+      const sel = document.getElementById('id_visibility');
+      syncSegFromValue(sel?.value || 'public');
+    })();
+
+    /* 실시간 미리보기 바인딩 (이름/말투만 반영) */
+    const nameInput  = document.getElementById('{{ form.name.id_for_label }}') || document.querySelector('[name="name"]');
+    const styleInput = document.getElementById('{{ form.speaking_style.id_for_label }}') || document.querySelector('[name="speaking_style"]');
+
+    nameInput?.addEventListener('input', e=>{
+      document.getElementById('pv-name').textContent = e.target.value || '이름 미정';
+    });
+    styleInput?.addEventListener('input', e=>{
+      document.getElementById('pv-b2').textContent = e.target.value
+        ? `대화 톤 예: ${e.target.value}`
+        : '말투/스타일을 적으면 여기에 톤이 반영돼요.';
+    });
+
+    /* 이미지 미리보기 + 파일명 표시 */
+    const fileInput = document.getElementById('id_character_image');
+    const preview   = document.getElementById('preview');
+    const filename  = document.getElementById('filename');
+    const pvAvatar  = document.getElementById('pv-avatar');
+
+    fileInput?.addEventListener('change', e=>{
+      const f = e.target.files?.[0];
+      if(!f){ filename.textContent = '선택된 파일 없음'; return; }
+      filename.textContent = f.name;
+      const url = URL.createObjectURL(f);
+      preview.src = url;
+      pvAvatar.src = url;
+    });
+
+    // 장르 자동 설정 (URL 파라미터로 전달된 경우)
+    {% if genre %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const genreSelect = document.getElementById('{{ form.genre.id_for_label }}') || document.querySelector('[name="genre"]');
+        if (genreSelect) {
+            genreSelect.value = '{{ genre.id }}';
+        }
+    });
+    {% endif %}
+  </script>
+</div>
+{% endblock %}
